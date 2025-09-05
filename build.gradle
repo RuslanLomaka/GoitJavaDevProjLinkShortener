@@ -1,7 +1,7 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.5.5'
-	id 'io.spring.dependency-management' version '1.1.7'
+    id 'java'
+    id 'org.springframework.boot' version '3.5.5'
+    id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'org.decepticons'
@@ -9,49 +9,63 @@ version = '0.0.1-SNAPSHOT'
 description = 'linkShortener'
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(24)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(24)
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
+
 ext {
-	set('springAiVersion', "1.0.1")
+    set('springAiVersion', "1.0.1")
+    lombokVersion = "1.18.38"
+    swaggerAnnotationsVersion = "2.2.36"
+    openapiVersion = "25.0.0.8"
+    mockitoVersion = "5.19.0"
+    junitVersion = "6.0.0-RC2"
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.flywaydb:flyway-core'
-	implementation 'org.flywaydb:flyway-database-postgresql'
-	implementation 'org.springframework.ai:spring-ai-starter-model-openai'
-    implementation("com.ibm.websphere.appserver.features:openapi-3.0:25.0.0.8")
-    implementation("io.swagger.core.v3:swagger-annotations:2.2.36")
+    // Core Spring Boot
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
 
-	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
+    // DB & Migrations
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+    runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // AI / Swagger
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+    implementation "com.ibm.websphere.appserver.features:openapi-3.0:${openapiVersion}"
+    implementation "io.swagger.core.v3:swagger-annotations:${swaggerAnnotationsVersion}"
+
+    // Lombok
+    implementation "org.projectlombok:lombok:${lombokVersion}"
+
+    // Dev tools
+    developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
     developmentOnly 'org.springframework.ai:spring-ai-spring-boot-docker-compose'
 
-	runtimeOnly 'com.h2database:h2'
-	runtimeOnly 'org.postgresql:postgresql'
-
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.security:spring-security-test'
-    testImplementation("org.mockito:mockito-core:5.19.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:6.0.0-RC2")
-
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation "org.mockito:mockito-core:${mockitoVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 dependencyManagement {
-	imports {
-		mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
-	}
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+    }
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }

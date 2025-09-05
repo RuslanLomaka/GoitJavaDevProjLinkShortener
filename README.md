@@ -109,6 +109,13 @@ You have `spring-boot-docker-compose` (developmentOnly). If you add a
 
 ------------------------------------------------------------------------
 
+## 🧰 Lombok
+We use [Lombok](https://projectlombok.org/) to reduce boilerplate code.
+- Provides `@Getter`, `@Setter`, `@Data`, etc.
+- Make sure to enable annotation processing in your IDE.
+
+------------------------------------------------------------------------
+
 ## 📚 API (v1 Draft)
 
 ### Auth

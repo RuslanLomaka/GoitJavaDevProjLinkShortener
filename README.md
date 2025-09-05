@@ -1,0 +1,178 @@
+# URL Shortener
+
+A Spring Boot service that converts long URLs into short codes.\
+Users register/login (JWT), create/manage links, and get redirects.
+
+------------------------------------------------------------------------
+
+## 🚀 Tech Stack
+
+-   **Language/Build:** Java 24 (Toolchain), Gradle\
+-   **Framework:** Spring Boot 3.5.5\
+-   **Starters:** Web, Security, Data JPA\
+-   **DB:** PostgreSQL (prod), H2 (dev option)\
+-   **Migrations:** Flyway (core + postgres)\
+-   **Docs:** Swagger annotations (UI wiring TBD)\
+-   **CI/CD:** GitHub Actions (planned)
+
+------------------------------------------------------------------------
+
+## 📦 Project Info
+
+-   **Group:** `org.decepticons`\
+-   **Artifact:** `linkShortener`\
+-   **Version:** `0.0.1-SNAPSHOT`
+
+------------------------------------------------------------------------
+
+## ⚙️ Setup
+
+### 1) Requirements
+
+-   JDK not required locally (Gradle uses **Java 24 toolchain**).
+-   PostgreSQL for persistence (H2 available at runtime for quick
+    tests).
+
+### 2) Clone
+
+``` bash
+git clone https://github.com/RuslanLomaka/GoitJavaDevProjLinkShortener.git
+cd GoitJavaDevProjLinkShortener
+```
+
+### 3) Environment Variables
+
+Create `.env` in project root (not committed):
+
+    DB_URL=jdbc:postgresql://localhost:5432/url_shortener
+    DB_USERNAME=postgres
+    DB_PASSWORD=postgres
+
+    # Security
+    JWT_SECRET=change-me
+    JWT_TTL_SECONDS=3600
+
+    # App
+    APP_BASE_URL=http://localhost:8080
+    SPRING_PROFILES_ACTIVE=default
+
+> Devs keep their own `.env`. Never commit secrets.
+
+------------------------------------------------------------------------
+
+## ▶️ Run (Local)
+
+### Option A: Plain run
+
+``` bash
+./gradlew bootRun
+```
+
+### Option B: With Docker Compose (dev only)
+
+You have `spring-boot-docker-compose` (developmentOnly). If you add a
+`compose.yaml` with Postgres, Spring Boot will auto-start it on
+`bootRun`.
+
+------------------------------------------------------------------------
+
+## 🧪 Testing
+
+-   Frameworks: JUnit 5, Mockito, Spring Security Test.\
+-   Run tests:
+
+``` bash
+./gradlew test
+```
+
+> Recommend adding **Testcontainers** later for Postgres integration
+> tests and a coverage gate (≥80%).
+
+------------------------------------------------------------------------
+
+## 🔐 Security
+
+-   Spring Security starter included.\
+-   Plan: register/login returning **JWT**; protect `/api/v1/**` except
+    redirects.\
+-   Store only **password hashes** (BCrypt/Argon2).
+
+------------------------------------------------------------------------
+
+## 🗃️ Database & Migrations
+
+-   **Flyway** is included.\
+-   Place migrations under:\
+    `src/main/resources/db/migration`\
+-   First migration (planned): create `users`, `links` tables with
+    constraints.
+
+------------------------------------------------------------------------
+
+## 📚 API (v1 Draft)
+
+### Auth
+
+-   `POST /api/v1/auth/register` --- create user
+-   `POST /api/v1/auth/login` --- returns JWT
+
+### User
+
+-   `GET /api/v1/users/me` --- current profile
+-   `PATCH /api/v1/users/me/password` --- change password
+
+### Links
+
+-   `POST /api/v1/links` --- create short link (`originalUrl`,
+    `expiresAt?`)
+-   `GET /api/v1/links` --- list own links (paging)
+-   `GET /api/v1/links/{id}` --- details
+-   `PATCH /api/v1/links/{id}` --- update URL/expiry/status
+-   `DELETE /api/v1/links/{id}` --- delete
+
+### Redirect (public)
+
+-   `GET /{code}` --- 302 → original, updates stats
+
+------------------------------------------------------------------------
+
+## 🧾 OpenAPI / Swagger
+
+-   You already use `io.swagger.core.v3:swagger-annotations`.\
+-   To serve docs/UI later, add (suggestion):
+    -   `org.springdoc:springdoc-openapi-starter-webmvc-ui`\
+        Then docs at `/v3/api-docs`, UI at `/swagger-ui/index.html`.
+
+------------------------------------------------------------------------
+
+## 🧰 Useful Gradle Tasks
+
+``` bash
+./gradlew clean build      # build jar + run tests
+./gradlew bootRun          # run app (uses toolchain)
+./gradlew test             # unit/integration tests
+```
+
+------------------------------------------------------------------------
+
+## 🧭 Conventions
+
+-   Package: `org.decepticons.linkshortener` (suggested)\
+-   Profiles: `default` (local), `prod` (server)\
+-   Versioned API base: `/api/v1`\
+-   Auth header: `Authorization: Bearer <token>`\
+-   Error model: `{timestamp,status,error,message,path,traceId}`
+
+------------------------------------------------------------------------
+
+## 🗺️ Roadmap (Sprint 1)
+
+1.  Flyway `V1__init.sql` --- `users`, `links` schema\
+2.  Entities + repositories (User, Link)\
+3.  Auth: register/login (JWT)\
+4.  Create link + Redirect endpoints\
+5.  Swagger UI wiring (springdoc)\
+6.  docker-compose (app + Postgres)\
+7.  Basic CI (build + test)
+
+------------------------------------------------------------------------

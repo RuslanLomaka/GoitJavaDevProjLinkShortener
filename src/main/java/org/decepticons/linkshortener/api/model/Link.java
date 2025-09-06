@@ -67,10 +67,17 @@ public class Link {
     public LinkStatus getStatus() { return status; }
     public void setStatus(LinkStatus status) { this.status = status; }
 
+    public void incrementClicks() {
+        this.clicks++;
+        this.lastAccessedAt = Instant.now();
+    }
+
     @Override public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Link that)) return false;
         return Objects.equals(id, that.id);
     }
-    @Override public int hashCode() { return Objects.hash(id); }
+    @Override public int hashCode() {
+        return Objects.hash(id);
+    }
 }

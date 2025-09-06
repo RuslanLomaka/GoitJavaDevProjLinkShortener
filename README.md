@@ -90,6 +90,40 @@ You have `spring-boot-docker-compose` (developmentOnly). If you add a
 
 ------------------------------------------------------------------------
 
+
+# Admin / Health
+
+The application provides a health check endpoint to verify that the service is running.
+
+## Endpoint
+```
+GET http://localhost:8080/api/v1/health
+```
+
+## Example Response
+```json
+{
+  "status": "UP"
+}
+```
+
+## Usage
+- Open the endpoint in a web browser, Postman, or curl.
+- A successful response with `"status": "UP"` confirms that:
+    - The Spring Boot application started correctly.
+    - The web server is accessible.
+- This check is required for all team members to confirm before continuing with development.
+
+## Notes
+- The `/health` endpoint is unsecured and intended for internal verification only.
+- Documented for project setup validation, not for production monitoring.
+
+
+
+
+
+------------------------------------------------------------------------
+
 ## 🔐 Security
 
 -   Spring Security starter included.\

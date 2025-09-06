@@ -46,4 +46,8 @@ public class User {
         return Objects.equals(id, that.id);
     }
     @Override public int hashCode() { return Objects.hash(id); }
+
+    public void setUsername(String username) {
+        // default implementation ignored
+    }
 }

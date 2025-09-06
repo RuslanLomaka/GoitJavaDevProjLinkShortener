@@ -79,4 +79,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
+
+    // JwtAuthenticationFilter extends OncePerRequestFilter
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest req) {
+        String p = req.getRequestURI();
+        return p.startsWith("/api/v1/health")
+                || p.startsWith("/swagger-ui/")
+                || p.startsWith("/v3/api-docs/");
+    }
 }

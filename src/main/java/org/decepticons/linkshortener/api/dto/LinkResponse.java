@@ -12,4 +12,4 @@ public record LinkResponse(
         long clicks,
         String status,
         UUID ownerId
-) { }
+) {}

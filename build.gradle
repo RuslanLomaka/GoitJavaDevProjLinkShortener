@@ -10,7 +10,7 @@ description = 'linkShortener'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(24)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -22,8 +22,6 @@ repositories {
 ext {
     set('springAiVersion', "1.0.1")
     lombokVersion = "1.18.38"
-    swaggerAnnotationsVersion = "2.2.36"
-    openapiVersion = "25.0.0.8"
     mockitoVersion = "5.19.0"
     junitVersion = "6.0.0-RC2"
 }
@@ -40,17 +38,12 @@ dependencies {
     runtimeOnly 'com.h2database:h2'
     runtimeOnly 'org.postgresql:postgresql'
 
-    // AI / Swagger
-    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
-    implementation "com.ibm.websphere.appserver.features:openapi-3.0:${openapiVersion}"
-    implementation "io.swagger.core.v3:swagger-annotations:${swaggerAnnotationsVersion}"
+    // OpenAPI / Swagger UI
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.12")
 
     // Lombok
     implementation "org.projectlombok:lombok:${lombokVersion}"
-
-    // Dev tools
-    developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
-    developmentOnly 'org.springframework.ai:spring-ai-spring-boot-docker-compose'
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
     // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -58,6 +51,10 @@ dependencies {
     testImplementation "org.mockito:mockito-core:${mockitoVersion}"
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // Testcontainers
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
 }
 
 dependencyManagement {

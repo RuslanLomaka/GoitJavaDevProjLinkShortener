@@ -29,7 +29,6 @@ public class LinkController {
             @RequestParam String username,
             @RequestParam(required = false) Instant expiresAt
     ) {
-
         User owner = new User();
         owner.setUsername(username);
 

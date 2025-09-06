@@ -15,7 +15,7 @@ import java.util.Random;
 public class LinkService {
 
     private final LinkRepository linkRepository;
-    private final Random random = new Random(); // для генерації коду
+    private final Random random = new Random();
 
     public LinkService(LinkRepository linkRepository) {
         this.linkRepository = linkRepository;
@@ -27,8 +27,7 @@ public class LinkService {
         link.setOriginalUrl(originalUrl);
         link.setOwner(owner);
         link.setCode(generateRandomCode());
-        link.setExpiresAt(expiresAt); // кінцевий термін дії
-        link.setClicks(0L);
+        link.setExpiresAt(expiresAt);
         link.setStatus(LinkStatus.ACTIVE);
 
         linkRepository.save(link);
@@ -38,8 +37,7 @@ public class LinkService {
 
     @Transactional
     public void incrementClicks(Link link) {
-        link.setClicks(link.getClicks() + 1);
-        link.setLastAccessedAt(Instant.now());
+        link.incrementClicks();
         linkRepository.save(link);
     }
 
@@ -60,11 +58,13 @@ public class LinkService {
         String chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 6; i++) {
-            int idx = random.nextInt(chars.length()); // без Math.random()
-            sb.append(chars.charAt(idx));
+            sb.append(chars.charAt(random.nextInt(chars.length())));
         }
         return sb.toString();
     }
 
     public boolean isLinkActive(Link link) {
-        return link.getStatus()
+        return link.getStatus() == LinkStatus.ACTIVE &&
+                (link.getExpiresAt() == null || link.getExpiresAt().isAfter(Instant.now()));
+    }
+}

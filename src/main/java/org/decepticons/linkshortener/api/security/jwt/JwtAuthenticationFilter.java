@@ -94,7 +94,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       if (authorizationHeader != null) {
         LOG.warn("JWT Token does not begin with Bearer String");
       } else {
-        LOG.warn("JWT Token is missing");
+        LOG.debug("No JWT token, skipping authentication");
+        filterChain.doFilter(request, response);
+        return;
       }
       response.sendError(
           HttpServletResponse.SC_UNAUTHORIZED,
@@ -137,6 +139,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     String p = req.getRequestURI();
     return p.startsWith("/api/v1/health")
         || p.startsWith("/swagger-ui/")
-        || p.startsWith("/v3/api-docs/");
+        || p.startsWith("/v3/api-docs/")
+        || p.startsWith("/h2-console");
   }
 }

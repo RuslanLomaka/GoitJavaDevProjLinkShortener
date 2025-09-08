@@ -99,6 +99,14 @@ public class Link {
   @Column(name = "status", nullable = false, length = 16)
   private LinkStatus status = LinkStatus.ACTIVE;
 
+  /**
+   * Increments the number of clicks associated with this link
+   * and updates the {@code lastAccessedAt} timestamp.
+   * This method should be called whenever the shortened URL is
+   * accessed, ensuring both the click counter and the last access
+   * time are refreshed.
+   * </p>
+   */
   public void incrementClicks() {
     this.clicks++;
     this.lastAccessedAt = Instant.now();

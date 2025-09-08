@@ -1,16 +1,33 @@
-name: CI
+name: Checkstyle
 
 on:
-  push:
-    branches: [ "master" ]
   pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [ master, main ]
 
 jobs:
-  build:
+  checkstyle:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
 
-      - name: Dummy step
-        run: echo "Pipeline works!"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Grant execute permission for Gradle
+        run: chmod +x gradlew
+
+      - name: Run Checkstyle
+        run: ./gradlew --no-daemon checkstyleMain
+
+      # Optional: fail the build if any reports contain violations
+      - name: Show Checkstyle report if failed
+        if: failure()
+        run: |
+          echo "Checkstyle violations found. See build/reports/checkstyle for details."
+          ls -R build/reports/checkstyle || true

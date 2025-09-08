@@ -1,14 +1,15 @@
 name: Checkstyle
 
 on:
+  push:
+    branches: [ master, main ]
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [ opened, synchronize, reopened ]
     branches: [ master, main ]
 
 jobs:
   checkstyle:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -25,10 +26,10 @@ jobs:
       - name: Run Checkstyle
         run: ./gradlew --no-daemon checkstyleMain
 
-      # Optional: fail the build if any reports contain violations
-      - name: Show Checkstyle report if failed
+      # Optional: upload report when failing so it's easy to view from PR
+      - name: Upload Checkstyle report
         if: failure()
-        run: |
-          echo "Checkstyle violations found. See build/reports/checkstyle for details."
-          ls -R build/reports/checkstyle || true
-
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkstyle-report
+          path: build/reports/checkstyle/

@@ -1,7 +1,7 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version "${springBootVersion}"
-    id 'io.spring.dependency-management' version "${springDependencyManagementVersion}"
+    id 'org.springframework.boot' version '3.5.5'
+    id 'io.spring.dependency-management' version '1.1.7'
     id 'checkstyle'
 }
 
@@ -16,10 +16,6 @@ java {
 repositories { mavenCentral() }
 
 ext {
-    // Plugin versions
-    springBootVersion = '3.5.5'
-    springDependencyManagementVersion = '1.1.7'
-
     // Tool versions
     checkstyleVersion = '11.0.1'
     lombokVersion = '1.18.38'

@@ -11,12 +11,14 @@ import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.repository.LinkRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 /**
  * Application service responsible for creating and maintaining {@link Link} entities.
  * Provides operations for link creation, click tracking, simple DTO mapping,
  * and basic liveness checks (active + not expired).
  * </p>
  */
+
 
 @Service
 public class LinkService {
@@ -33,6 +35,7 @@ public class LinkService {
   public LinkService(LinkRepository linkRepository) {
     this.linkRepository = linkRepository;
   }
+
 
 
   /**
@@ -72,6 +75,7 @@ public class LinkService {
     linkRepository.save(link);
   }
 
+
   /**
    * Maps a {@link Link} JPA entity to a transport-friendly {@link LinkResponse}.
    *
@@ -80,6 +84,7 @@ public class LinkService {
    */
   public LinkResponse mapToResponse(Link link) {
     return new LinkResponse(
+
         link.getId(),
         link.getCode(),
         link.getOriginalUrl(),
@@ -108,6 +113,7 @@ public class LinkService {
   }
 
 
+
   /**
    * Checks whether a link is currently active: status is {@link LinkStatus#ACTIVE}
    * and the expiration moment (if any) is in the future.
@@ -117,8 +123,10 @@ public class LinkService {
    */
   public boolean isLinkActive(Link link) {
     return link.getStatus() == LinkStatus.ACTIVE
+
         &&
         (link.getExpiresAt() == null || link.getExpiresAt().isAfter(Instant.now()));
   }
+
 
 }

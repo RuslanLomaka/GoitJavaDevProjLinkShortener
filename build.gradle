@@ -15,8 +15,18 @@ java {
 
 repositories { mavenCentral() }
 
+ext {
+    // Tool versions
+    checkstyleVersion = '11.0.1'
+    lombokVersion = '1.18.38'
+    springdocVersion = '2.8.12'
+    jjwtVersion = '0.11.5'
+    flywayVersion = '10.17.2'   // optional, but good to pin
+    testcontainersVersion = '1.20.3'
+}
+
 checkstyle {
-    toolVersion = "11.0.1"
+    toolVersion = checkstyleVersion
     configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
     showViolations = true
     ignoreFailures = false
@@ -30,33 +40,34 @@ tasks.named("bootRun") { dependsOn(tasks.named("checkstyleMain")) }
 
 dependencies {
     // Core Spring Boot
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+    implementation "org.springframework.boot:spring-boot-starter-security"
+    implementation "org.springframework.boot:spring-boot-starter-web"
 
     // DB & Migrations
-    implementation 'org.flywaydb:flyway-core'
-    implementation 'org.flywaydb:flyway-database-postgresql'
-    runtimeOnly 'com.h2database:h2'
-    runtimeOnly 'org.postgresql:postgresql'
+    implementation "org.flywaydb:flyway-core:${flywayVersion}"
+    implementation "org.flywaydb:flyway-database-postgresql:${flywayVersion}"
+    runtimeOnly "com.h2database:h2"
+    runtimeOnly "org.postgresql:postgresql"
+    implementation "me.paulschwarz:spring-dotenv:4.0.0"
 
     // OpenAPI / Swagger UI
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.12'
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
 
-    // Lombok (compileOnly + annotationProcessor)
-    compileOnly 'org.projectlombok:lombok:1.18.38'
-    annotationProcessor 'org.projectlombok:lombok:1.18.38'
+    // Lombok
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
     // JSON Web Token
-    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    implementation "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
 
     // Testing
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.security:spring-security-test'
-    testImplementation 'org.testcontainers:postgresql'
-    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation "org.springframework.boot:spring-boot-starter-test"
+    testImplementation "org.springframework.security:spring-security-test"
+    testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
+    testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
 }
 
 test { useJUnitPlatform() }

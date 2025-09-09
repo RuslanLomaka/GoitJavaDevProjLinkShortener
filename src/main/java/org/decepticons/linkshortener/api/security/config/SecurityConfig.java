@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -51,10 +52,12 @@ public class SecurityConfig {
                 "/auth/login",
                 "/api/v1/health",
                 "/swagger-ui/**",
-                "/v3/api-docs/**")
+                "/v3/api-docs/**",
+              "/h2-console/**")        // ADD: allow H2 console)
             .permitAll()
             .anyRequest().authenticated()
         )
+        .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
         .sessionManagement(session -> session
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         );

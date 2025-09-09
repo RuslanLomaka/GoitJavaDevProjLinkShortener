@@ -101,7 +101,12 @@ public class Link {
 
 
   /**
-    * Increment the click count for this link and update the last accessed timestamp.
+   * Increments the number of clicks associated with this link
+   * and updates the {@code lastAccessedAt} timestamp.
+   * This method should be called whenever the shortened URL is
+   * accessed, ensuring both the click counter and the last access
+   * time are refreshed.
+   * </p>
    */
   public void incrementClicks() {
     this.clicks++;

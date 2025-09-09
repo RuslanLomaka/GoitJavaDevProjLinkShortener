@@ -99,6 +99,10 @@ public class Link {
   @Column(name = "status", nullable = false, length = 16)
   private LinkStatus status = LinkStatus.ACTIVE;
 
+
+  /**
+    * Increment the click count for this link and update the last accessed timestamp.
+   */
   public void incrementClicks() {
     this.clicks++;
     this.lastAccessedAt = Instant.now();

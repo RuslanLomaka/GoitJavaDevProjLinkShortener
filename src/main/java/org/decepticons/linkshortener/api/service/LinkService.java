@@ -1,8 +1,10 @@
 package org.decepticons.linkshortener.api.service;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Random;
 import org.decepticons.linkshortener.api.dto.LinkResponse;
+import org.decepticons.linkshortener.api.dto.UrlRequest;
 import org.decepticons.linkshortener.api.model.Link;
 import org.decepticons.linkshortener.api.model.LinkStatus;
 import org.decepticons.linkshortener.api.model.User;
@@ -16,12 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
  * and basic liveness checks (active + not expired).
  * </p>
  */
+
+
 @Service
 public class LinkService {
-
-  private static final String CODE_ALPHABET =
-      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  private static final int CODE_LENGTH = 6;
 
   private final LinkRepository linkRepository;
   private final Random random = new Random();
@@ -31,30 +31,35 @@ public class LinkService {
    *
    * @param linkRepository repository used to persist and load {@link Link} entities
    */
+
   public LinkService(LinkRepository linkRepository) {
     this.linkRepository = linkRepository;
   }
+
+
 
   /**
    * Creates and persists a new {@link Link}.
    *
    * @param originalUrl the original long URL to be shortened
    * @param owner       the user who owns the link (must be non-null and managed)
-   * @param expiresAt   optional expiration instant; if {@code null} the link does not expire
    * @return a {@link LinkResponse} representing the newly created link
    */
   @Transactional
-  public LinkResponse createLink(String originalUrl, User owner, Instant expiresAt) {
+  public LinkResponse createLink(UrlRequest originalUrl, User owner) {
     Link link = new Link();
-    link.setOriginalUrl(originalUrl);
+    link.setOriginalUrl(originalUrl.getUrl());
     link.setOwner(owner);
+
     link.setCode(generateRandomCode());
-    link.setExpiresAt(expiresAt);
+    link.setExpiresAt(Instant.now().plus(2, ChronoUnit.DAYS));
     link.setStatus(LinkStatus.ACTIVE);
 
     linkRepository.save(link);
+
     return mapToResponse(link);
   }
+
 
   /**
    * Increments the click counter of the given link and persists the change.
@@ -70,6 +75,7 @@ public class LinkService {
     linkRepository.save(link);
   }
 
+
   /**
    * Maps a {@link Link} JPA entity to a transport-friendly {@link LinkResponse}.
    *
@@ -78,30 +84,35 @@ public class LinkService {
    */
   public LinkResponse mapToResponse(Link link) {
     return new LinkResponse(
-      link.getId(),
-      link.getCode(),
-      link.getOriginalUrl(),
-      link.getCreatedAt(),
-      link.getExpiresAt(),
-      link.getClicks(),
-      link.getStatus().name(),
-      link.getOwner().getId()
+
+        link.getId(),
+        link.getCode(),
+        link.getOriginalUrl(),
+        link.getCreatedAt(),
+        link.getExpiresAt(),
+        link.getClicks(),
+        link.getStatus().name(),
+        link.getOwner().getId()
     );
   }
 
+
+
   /**
-   * Generates a pseudo-random short code of fixed length using the
-   * alphanumeric alphabet defined by {@link #CODE_ALPHABET}.
+   * Generates a pseudo-random short code of fixed length .
    *
    * @return a new short code (e.g., {@code "aZ3fQ1"})
    */
   private String generateRandomCode() {
-    StringBuilder sb = new StringBuilder(CODE_LENGTH);
-    for (int i = 0; i < CODE_LENGTH; i++) {
-      sb.append(CODE_ALPHABET.charAt(random.nextInt(CODE_ALPHABET.length())));
+    String chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < 6; i++) {
+      sb.append(chars.charAt(random.nextInt(chars.length())));
     }
     return sb.toString();
   }
+
+
 
   /**
    * Checks whether a link is currently active: status is {@link LinkStatus#ACTIVE}
@@ -112,6 +123,10 @@ public class LinkService {
    */
   public boolean isLinkActive(Link link) {
     return link.getStatus() == LinkStatus.ACTIVE
-        && (link.getExpiresAt() == null || link.getExpiresAt().isAfter(Instant.now()));
+
+        &&
+        (link.getExpiresAt() == null || link.getExpiresAt().isAfter(Instant.now()));
   }
+
+
 }

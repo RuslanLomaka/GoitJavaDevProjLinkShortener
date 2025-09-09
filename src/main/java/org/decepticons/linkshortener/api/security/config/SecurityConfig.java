@@ -49,6 +49,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(authorize -> authorize
             .requestMatchers("/auth/register",
                 "/auth/login",
+                "/auth/refresh",
                 "/api/v1/health",
                 "/swagger-ui/**",
                 "/v3/api-docs/**",
@@ -56,7 +57,8 @@ public class SecurityConfig {
             .permitAll()
             .anyRequest().authenticated()
         )
-        .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
+        .headers(headers -> headers.frameOptions(
+            HeadersConfigurer.FrameOptionsConfig::sameOrigin))
         .sessionManagement(session -> session
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         );

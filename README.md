@@ -74,6 +74,22 @@ You have `spring-boot-docker-compose` (developmentOnly). If you add a
 `compose.yaml` with Postgres, Spring Boot will auto-start it on
 `bootRun`.
 
+# Developer Quick Links (local)
+
+When you run the app locally, these endpoints are available out-of-the-box:
+
+| Feature            | URL                                           | Description                     | Notes |
+|--------------------|-----------------------------------------------|---------------------------------|-------|
+| Health check       | [http://localhost:8080/api/v1/health](http://localhost:8080/api/v1/health) | Simple liveness endpoint.       | Returns `200 OK` when the app is up. |
+| Swagger UI         | [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html) | Interactive API docs & try-it-out. | No auth required. |
+| OpenAPI JSON       | [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs) | Raw OpenAPI spec (JSON).        | Useful for codegen/tools. |
+| OpenAPI YAML       | [http://localhost:8080/v3/api-docs.yaml](http://localhost:8080/v3/api-docs.yaml) | Raw OpenAPI spec (YAML).        | Some tools prefer YAML. |
+| H2 Console *(dev)* | [http://localhost:8080/h2-console](http://localhost:8080/h2-console) | In-memory DB web console.       | **Driver:** `org.h2.Driver`  • **JDBC URL:** `jdbc:h2:mem:shortenerdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE`  • **User:** `sa`  • **Password:** *(empty)* |
+
+> ℹ️ If you’ve changed the server port or context path, replace `http://localhost:8080/` with your actual base URL.  
+> 🔐 H2 console is intended for **dev** usage only.
+
+
 ------------------------------------------------------------------------
 
 ## 🧪 Testing

@@ -17,5 +17,5 @@ package org.decepticons.linkshortener.api.model;
  * @since 1.0
  */
 public enum LinkStatus {
-    ACTIVE, INACTIVE
+  ACTIVE, INACTIVE
 }

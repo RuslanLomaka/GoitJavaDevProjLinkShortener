@@ -10,6 +10,7 @@ import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.decepticons.linkshortener.api.security.jwt.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -57,6 +58,10 @@ public class SecurityConfig {
                 "/v3/api-docs/**",
                 "/h2-console/**")        // ADD: allow H2 console)
             .permitAll()
+            .requestMatchers(
+                HttpMethod.GET,
+                "/api/v1/urls"
+            ).permitAll()
             .anyRequest().authenticated()
         )
         .headers(headers -> headers.frameOptions(

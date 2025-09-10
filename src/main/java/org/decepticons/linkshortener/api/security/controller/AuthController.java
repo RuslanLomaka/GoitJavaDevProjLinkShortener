@@ -1,5 +1,7 @@
 package org.decepticons.linkshortener.api.security.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.decepticons.linkshortener.api.dto.AuthRequest;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
  * REST controller for user authentication.
  * Provides endpoints for registration, login, and token refresh.
  */
+@Tag(name = "Authentication", description = "User authentication and management")
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -32,6 +35,7 @@ public class AuthController {
    * @return the username of the newly created user
    */
   @PostMapping("/register")
+  @Operation(summary = "Register a new user")
   public ResponseEntity<String> createUser(
       @Valid @RequestBody final RegistrationRequest request
   ) {
@@ -40,12 +44,13 @@ public class AuthController {
   }
 
   /**
-   * Authenticates a user and returns JWT token.
+   * Authenticates a user and returns JWT tokens.
    *
    * @param request the login request
    * @return authentication response with JWT token
    */
   @PostMapping("/login")
+  @Operation(summary = "Log in and get JWT tokens")
   public ResponseEntity<AuthResponse> authenticate(
       @RequestBody final AuthRequest request
   ) {
@@ -60,6 +65,7 @@ public class AuthController {
    * @return authentication response with refreshed JWT token
    */
   @PostMapping("/refresh")
+  @Operation(summary = "Refresh JWT access token")
   public ResponseEntity<AuthResponse> refreshToken(
       @RequestHeader("Authorization") final String authHeader
   ) {

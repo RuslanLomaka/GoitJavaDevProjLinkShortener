@@ -5,66 +5,69 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
+
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-import org.decepticons.linkshortener.api.exceptions.ExpiredTokenException;
-import org.decepticons.linkshortener.api.exceptions.InvalidTokenException;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
 
 /**
- * Utility class for generating, validating, and parsing JWT tokens.
+ * Utility class for generating and validating JWT tokens.
  * Provides methods to create JWT tokens for authenticated users,
  * refresh tokens, extract claims, and validate expiration.
  */
 @Component
 public class JwtTokenUtil {
 
-  /** Token validity duration in seconds. */
-  private final long expirationSeconds;
-
-  /** The signing key derived from the secret. */
+  /** The signing key. */
   private final Key signingKey;
 
-  /** Constant for converting seconds to milliseconds. */
-  private static final long MILLISECONDS_IN_SECOND = 1000L;
+  /** The token validity duration for access tokens in seconds. */
+  private final long expirationSeconds;
+
+  /** The token validity duration for refresh tokens in seconds. */
+  private final long refreshExpirationSeconds;
 
   /**
-   * Constructs a JwtTokenUtil with the given secret and token expiration time.
+   * Constructs a JwtTokenUtil with the given secrets and expiration times.
    *
-   * @param secretValue            the secret key used for signing JWT tokens
-   * @param expirationSecondsValue the token validity duration in seconds
+   * @param secretValue            the secret key for signing JWT tokens
+   * @param expirationSecondsValue the access token validity duration in seconds
+   * @param refreshExpirationValue the refresh token validity duration in seconds
    */
-  public JwtTokenUtil(@Value("${JWT_SECRET}") final String secretValue,
-      @Value("${JWT_TTL_SECONDS}") final long expirationSecondsValue) {
+  public JwtTokenUtil(
+      @Value("${JWT_SECRET}") final String secretValue,
+      @Value("${JWT_TTL_SECONDS}") final long expirationSecondsValue,
+      @Value("${JWT_REFRESH_TTL_SECONDS}") final long refreshExpirationValue) {
     this.expirationSeconds = expirationSecondsValue;
+    this.refreshExpirationSeconds = refreshExpirationValue;
     this.signingKey = getSignInKey(secretValue);
   }
 
   /**
-   * Generates a JWT token for the given user.
+   * Generates a standard access token for the given user.
    *
    * @param userDetails the user details
-   * @return a signed JWT token
+   * @return a signed JWT access token
    */
-  public String generateToken(final UserDetails userDetails) {
+  public String generateAccessToken(final UserDetails userDetails) {
     Map<String, Object> claims = new HashMap<>();
-    return createToken(claims, userDetails.getUsername());
+    return createToken(claims, userDetails.getUsername(), expirationSeconds);
   }
 
   /**
-   * Refreshes a JWT token by updating its issued and expiration times.
+   * Generates a refresh token with a longer expiration.
    *
-   * @param token the existing JWT token to refresh
-   * @return a refreshed JWT token
+   * @param userDetails the user details to include in the token
+   * @return the generated JWT refresh token
    */
-  public String refreshToken(final String token) {
-    Claims oldClaims = extractAllClaims(token);
-    return createToken(oldClaims, oldClaims.getSubject());
+  public String generateRefreshToken(final UserDetails userDetails) {
+    Map<String, Object> claims = new HashMap<>();
+    return createToken(claims, userDetails.getUsername(), refreshExpirationSeconds);
   }
 
   /**
@@ -74,14 +77,9 @@ public class JwtTokenUtil {
    * @param userDetails the user details to validate against.
    * @return true if the token is valid, false otherwise.
    */
-
-  public boolean validateToken(
-      final String token,
-      final UserDetails userDetails
-  ) {
+  public boolean validateToken(final String token, final UserDetails userDetails) {
     final String username = extractUsername(token);
-    return (username.equals(userDetails.getUsername())
-        && !isTokenExpired(token));
+    return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
   }
 
   /**
@@ -97,16 +95,13 @@ public class JwtTokenUtil {
   /**
    * Extracts a specific claim from a JWT token.
    *
-   * @param <T>            the type of the claim to extract
-   * @param token          the JWT token from which to extract the claim
+   * @param <T> the type of the claim to extract
+   * @param token the JWT token from which to extract the claim
    * @param claimsResolver a function to resolve a specific claim
-   *                       from the token's claims
+   * from the token's claims
    * @return the extracted claim
    */
-
-  public <T> T extractClaim(
-      final String token,
-      final Function<Claims, T> claimsResolver) {
+  public <T> T extractClaim(final String token, final Function<Claims, T> claimsResolver) {
     final Claims claims = extractAllClaims(token);
     return claimsResolver.apply(claims);
   }
@@ -126,42 +121,50 @@ public class JwtTokenUtil {
    *
    * @param claims the claims to be included in the token.
    * @param subject the subject of the token (usually the username).
+   * @param expirationSeconds the token validity in seconds.
    * @return the built JWT token string.
    */
   private String createToken(
       final Map<String, Object> claims,
-      final String subject
+      final String subject,
+      final long expirationSeconds
   ) {
     return Jwts.builder()
         .setClaims(claims)
         .setSubject(subject)
         .setIssuedAt(new Date(System.currentTimeMillis()))
-        .setExpiration(
-            new Date(System.currentTimeMillis()
-                + expirationSeconds * MILLISECONDS_IN_SECOND)
-        )
+        .setExpiration(new Date(System.currentTimeMillis() + expirationSeconds * 1000))
         .signWith(signingKey, SignatureAlgorithm.HS256)
         .compact();
   }
 
+  /**
+   * Extracts all claims from a JWT token.
+   * @param token the JWT token
+   * @return the claims
+   */
   private Claims extractAllClaims(final String token) {
-    try {
-      return Jwts.parserBuilder()
-          .setSigningKey(signingKey)
-          .build()
-          .parseClaimsJws(token)
-          .getBody();
-    } catch (io.jsonwebtoken.ExpiredJwtException e) {
-      throw new ExpiredTokenException("JWT expired", e);
-    } catch (io.jsonwebtoken.JwtException e) {
-      throw new InvalidTokenException("Invalid JWT token", e);
-    }
+    return Jwts.parserBuilder()
+        .setSigningKey(signingKey)
+        .build()
+        .parseClaimsJws(token)
+        .getBody();
   }
 
+  /**
+   * Checks if a token is expired.
+   * @param token the JWT token
+   * @return true if expired, false otherwise
+   */
   private boolean isTokenExpired(final String token) {
     return extractExpiration(token).before(new Date());
   }
 
+  /**
+   * Derives a signing key from the secret.
+   * @param secret the secret key as a string
+   * @return the signing key
+   */
   private Key getSignInKey(final String secret) {
     byte[] keyBytes = Decoders.BASE64.decode(secret);
     return Keys.hmacShaKeyFor(keyBytes);

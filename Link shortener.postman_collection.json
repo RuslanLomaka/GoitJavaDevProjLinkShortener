@@ -1,16 +1,29 @@
 {
 	"info": {
-		"_postman_id": "82137b05-a100-432c-8568-bc72e3bf0204",
+		"_postman_id": "7d104d3d-da0b-4454-b008-6eb536d8c2c2",
 		"name": "Link shortener",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "43658247"
+		"_exporter_id": "48333115"
 	},
 	"item": [
 		{
 			"name": "Health",
 			"request": {
 				"method": "GET",
-				"header": []
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/v1/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"health"
+					]
+				}
 			},
 			"response": []
 		},
@@ -18,7 +31,10 @@
 			"name": "JSON API docs",
 			"request": {
 				"method": "GET",
-				"header": []
+				"header": [],
+				"url": {
+					"raw": ""
+				}
 			},
 			"response": []
 		}

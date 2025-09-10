@@ -1,14 +1,19 @@
 package org.decepticons.linkshortener.api.dto;
 
+import lombok.Data;
+
 /**
- * Represents an authentication request containing
- * a username and password.
- *
- * @param username the username of the user
- * @param password the password of the user
+ * DTO representing login credentials.
  */
-public record AuthRequest(
-    String username,
-    String password
-) {
+@Data
+public class AuthRequest {
+  /**
+   * The username provided for login.
+   */
+  private String username;
+
+  /**
+   * The password provided for login.
+   */
+  private String password;
 }

@@ -1,11 +1,11 @@
 package org.decepticons.linkshortener.api.security.jwt;
 
-import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.decepticons.linkshortener.api.exceptions.InvalidTokenException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -41,15 +41,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   /**
    * Constructs a JwtAuthenticationFilter with required dependencies.
    *
-   * @param tokenUtil utility to parse and validate JWT tokens
-   * @param detailsService service to load user details
+   * @param inJwtTokenUtil utility to parse and validate JWT tokens
+   * @param inUserDetailsService service to load user details
    */
-  public JwtAuthenticationFilter(
-      final JwtTokenUtil tokenUtil,
-      final UserDetailsService detailsService) {
-    this.jwtTokenUtil = tokenUtil;
-    this.userDetailsService = detailsService;
+  public JwtAuthenticationFilter(final JwtTokenUtil inJwtTokenUtil,
+      final UserDetailsService inUserDetailsService) {
+    this.jwtTokenUtil = inJwtTokenUtil;
+    this.userDetailsService = inUserDetailsService;
   }
+
   /**
    * Filters each request to validate JWT tokens and set authentication.
    *
@@ -59,70 +59,45 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
    * @throws ServletException if a servlet error occurs
    * @throws IOException if an I/O error occurs
    */
-
   @Override
-  protected void doFilterInternal(
-      final HttpServletRequest request,
+  protected void doFilterInternal(final HttpServletRequest request,
       final HttpServletResponse response,
-      final FilterChain filterChain) throws ServletException, IOException {
+      final FilterChain filterChain)
+      throws ServletException, IOException {
 
     final String authorizationHeader = request.getHeader(AUTHORIZATION_HEADER);
-    String username = null;
-    String jwtToken = null;
+    String jwtToken;
 
-    if (authorizationHeader != null
-        && authorizationHeader.startsWith(BEARER_PREFIX)) {
-      jwtToken = authorizationHeader.substring(BEARER_PREFIX.length());
-      try {
-        username = jwtTokenUtil.extractUsername(jwtToken);
-      } catch (ExpiredJwtException e) {
-        LOG.warn("JWT Token has expired: {}", e.getMessage());
-        response.sendError(
-            HttpServletResponse.SC_UNAUTHORIZED,
-            "JWT Token has expired"
-        );
-        return;
-      } catch (Exception e) {
-        LOG.warn("Unable to parse JWT Token: {}", e.getMessage());
-        response.sendError(
-            HttpServletResponse.SC_UNAUTHORIZED,
-            "Invalid JWT Token"
-        );
-        return;
-      }
-    } else {
-      if (authorizationHeader != null) {
-        LOG.warn("JWT Token does not begin with Bearer String");
-      } else {
-        LOG.debug("No JWT token, skipping authentication");
-        filterChain.doFilter(request, response);
-        return;
-      }
-      response.sendError(
-          HttpServletResponse.SC_UNAUTHORIZED,
-          "JWT Token is missing or invalid"
-      );
+    if (authorizationHeader == null) {
+      LOG.debug("No JWT token, skipping authentication");
+      filterChain.doFilter(request, response);
       return;
     }
+
+    if (!authorizationHeader.startsWith(BEARER_PREFIX)) {
+      LOG.warn("JWT Token does not begin with Bearer String");
+      throw new InvalidTokenException("JWT Token must start with 'Bearer '");
+    }
+
+    jwtToken = authorizationHeader.substring(BEARER_PREFIX.length());
+
+    // Declaration and initialization moved to the point of first use
+    final String username = jwtTokenUtil.extractUsername(jwtToken);
 
     if (username != null
         && SecurityContextHolder.getContext().getAuthentication() == null) {
       UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-      if (jwtTokenUtil.validateToken(jwtToken, userDetails)) {
-        UsernamePasswordAuthenticationToken authToken =
-            new UsernamePasswordAuthenticationToken(userDetails, null,
-                userDetails.getAuthorities());
-        authToken.setDetails(
-            new WebAuthenticationDetailsSource().buildDetails(request)
-        );
-        SecurityContextHolder.getContext().setAuthentication(authToken);
-      } else {
-        response.sendError(
-            HttpServletResponse.SC_UNAUTHORIZED,
-            "JWT Token is invalid"
-        );
-        return;
+
+      if (!jwtTokenUtil.validateToken(jwtToken, userDetails)) {
+        throw new InvalidTokenException("Token is expired or invalid");
       }
+
+      UsernamePasswordAuthenticationToken authToken =
+          new UsernamePasswordAuthenticationToken(userDetails, null,
+              userDetails.getAuthorities());
+      authToken.setDetails(
+          new WebAuthenticationDetailsSource().buildDetails(request));
+      SecurityContextHolder.getContext().setAuthentication(authToken);
     }
 
     filterChain.doFilter(request, response);
@@ -131,15 +106,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   /**
    * Determines if this filter should not apply to a given request.
    *
-   * @param req the HTTP request
+   * @param request the HTTP request
    * @return true if filter should be skipped, false otherwise
    */
   @Override
-  protected boolean shouldNotFilter(final HttpServletRequest req) {
-    String p = req.getRequestURI();
-    return p.startsWith("/api/v1/health")
-        || p.startsWith("/swagger-ui/")
-        || p.startsWith("/v3/api-docs/")
-        || p.startsWith("/h2-console");
+  protected boolean shouldNotFilter(final HttpServletRequest request) {
+    String path = request.getRequestURI();
+    return path.startsWith("/api/v1/health")
+        || path.startsWith("/swagger-ui/")
+        || path.startsWith("/v3/api-docs/")
+        || path.startsWith("/h2-console");
   }
 }

@@ -1,0 +1,26 @@
+{
+	"info": {
+		"_postman_id": "82137b05-a100-432c-8568-bc72e3bf0204",
+		"name": "Link shortener",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "43658247"
+	},
+	"item": [
+		{
+			"name": "Health",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "JSON API docs",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}

@@ -41,8 +41,8 @@ public class JwtTokenUtil {
    */
   public JwtTokenUtil(
       @Value("${JWT_SECRET}") final String secretValue,
-      @Value("${JWT_TTL_SECONDS}") final long expirationSecondsValue,
-      @Value("${JWT_REFRESH_TTL_SECONDS}") final long refreshExpirationValue) {
+      @Value("3600") final long expirationSecondsValue,
+      @Value("604800") final long refreshExpirationValue) {
     this.expirationSeconds = expirationSecondsValue;
     this.refreshExpirationSeconds = refreshExpirationValue;
     this.signingKey = getSignInKey(secretValue);

@@ -2,6 +2,8 @@ package org.decepticons.linkshortener.api.security.service;
 
 import org.decepticons.linkshortener.api.dto.AuthRequest;
 import org.decepticons.linkshortener.api.dto.AuthResponse;
+import org.decepticons.linkshortener.api.dto.RegistrationRequest;
+
 
 /**
  * Service interface for authentication and user registration.
@@ -32,5 +34,5 @@ public interface AuthService {
    * @param request the registration data (username and password)
    * @return the username of the newly registered user
    */
-  String registerUser(AuthRequest request);
+  String registerUser(RegistrationRequest request);
 }

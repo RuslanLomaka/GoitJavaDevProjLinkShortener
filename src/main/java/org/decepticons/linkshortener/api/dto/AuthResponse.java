@@ -1,9 +1,8 @@
 package org.decepticons.linkshortener.api.dto;
 
-import java.util.Collection;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.security.core.GrantedAuthority;
 
 /**
  * Represents an authentication response returned to the client
@@ -19,9 +18,9 @@ public class AuthResponse {
   private String username;
 
   /**
-   * Authorities granted to the authenticated user.
+   * Roles (authorities) granted to the authenticated user.
    */
-  private Collection<? extends GrantedAuthority> authorities;
+  private List<String> roles;
 
   /**
    * JWT token for authentication.
@@ -32,14 +31,14 @@ public class AuthResponse {
    * Creates a new AuthResponse.
    *
    * @param usernameParam    the username of the authenticated user
-   * @param authoritiesParam the authorities granted to the user
+   * @param rolesParam       the authorities granted to the user
    * @param tokenParam       the JWT token
    */
   public AuthResponse(final String usernameParam,
-      final Collection<? extends GrantedAuthority> authoritiesParam,
+      final List<String> rolesParam,
       final String tokenParam) {
     this.username = usernameParam;
-    this.authorities = authoritiesParam;
+    this.roles = rolesParam;
     this.token = tokenParam;
   }
 }

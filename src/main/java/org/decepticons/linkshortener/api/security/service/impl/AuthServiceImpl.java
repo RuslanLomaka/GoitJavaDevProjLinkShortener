@@ -1,8 +1,12 @@
 package org.decepticons.linkshortener.api.security.service.impl;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.decepticons.linkshortener.api.dto.AuthRequest;
 import org.decepticons.linkshortener.api.dto.AuthResponse;
+import org.decepticons.linkshortener.api.dto.RegistrationRequest;
+import org.decepticons.linkshortener.api.exceptions.ExpiredTokenException;
+import org.decepticons.linkshortener.api.exceptions.InvalidTokenException;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.security.jwt.JwtTokenUtil;
 import org.decepticons.linkshortener.api.security.model.CustomUserDetails;
@@ -11,6 +15,7 @@ import org.decepticons.linkshortener.api.security.service.UserAuthService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -44,16 +49,20 @@ public class AuthServiceImpl implements AuthService {
   public AuthResponse login(final AuthRequest request) {
     Authentication auth = authManager.authenticate(
         new UsernamePasswordAuthenticationToken(
-            request.username(),
-            request.password())
+            request.getUsername(),
+            request.getPassword())
     );
 
     UserDetails details = (UserDetails) auth.getPrincipal();
     String token = jwtUtil.generateToken(details);
 
+    List<String> roles = details.getAuthorities().stream()
+        .map(GrantedAuthority::getAuthority)
+        .toList();
+
     return new AuthResponse(
         details.getUsername(),
-        details.getAuthorities(),
+        roles,
         token);
   }
 
@@ -67,7 +76,9 @@ public class AuthServiceImpl implements AuthService {
   public AuthResponse refreshToken(final String authorizationHeader) {
     if (authorizationHeader == null
         || !authorizationHeader.startsWith(BEARER_PREFIX)) {
-      throw new IllegalArgumentException("Invalid or missing token");
+      throw new InvalidTokenException(
+          "Missing or malformed Authorization header"
+      );
     }
 
     String jwtToken = authorizationHeader.substring(BEARER_PREFIX.length());
@@ -77,13 +88,18 @@ public class AuthServiceImpl implements AuthService {
     UserDetails details = new CustomUserDetails(user);
 
     if (!jwtUtil.validateToken(jwtToken, details)) {
-      throw new IllegalArgumentException("Token expired or invalid");
+      throw new ExpiredTokenException("Token expired or invalid");
     }
 
     String refreshedToken = jwtUtil.refreshToken(jwtToken);
+
+    List<String> roles = details.getAuthorities().stream()
+        .map(GrantedAuthority::getAuthority)
+        .toList();
+
     return new AuthResponse(
         details.getUsername(),
-        details.getAuthorities(),
+        roles,
         refreshedToken);
   }
 
@@ -94,7 +110,7 @@ public class AuthServiceImpl implements AuthService {
    * @return the username of the newly registered user
    */
   @Override
-  public String registerUser(final AuthRequest request) {
+  public String registerUser(final RegistrationRequest request) {
     return userService.registerUser(request);
   }
 }

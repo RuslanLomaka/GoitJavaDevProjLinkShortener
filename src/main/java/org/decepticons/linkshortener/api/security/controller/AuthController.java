@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.decepticons.linkshortener.api.dto.AuthRequest;
 import org.decepticons.linkshortener.api.dto.AuthResponse;
+import org.decepticons.linkshortener.api.dto.RegistrationRequest;
 import org.decepticons.linkshortener.api.security.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,7 +33,7 @@ public class AuthController {
    */
   @PostMapping("/register")
   public ResponseEntity<String> createUser(
-      @Valid @RequestBody final AuthRequest request
+      @Valid @RequestBody final RegistrationRequest request
   ) {
     String username = authService.registerUser(request);
     return ResponseEntity.ok(username);

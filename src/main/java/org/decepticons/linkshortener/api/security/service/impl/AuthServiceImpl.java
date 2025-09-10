@@ -40,10 +40,10 @@ public class AuthServiceImpl implements AuthService {
   private final JwtTokenUtil jwtUtil;
 
   /**
-   * Authenticates a user and generates a JWT token.
+   * Authenticates a user and generates JWT tokens.
    *
    * @param request the authentication request containing username and password
-   * @return authentication response with JWT token
+   * @return authentication response with JWT tokens
    */
   @Override
   public AuthResponse login(final AuthRequest request) {
@@ -54,7 +54,8 @@ public class AuthServiceImpl implements AuthService {
     );
 
     UserDetails details = (UserDetails) auth.getPrincipal();
-    String token = jwtUtil.generateToken(details);
+    String accessToken = jwtUtil.generateAccessToken(details);
+    String refreshToken = jwtUtil.generateRefreshToken(details);
 
     List<String> roles = details.getAuthorities().stream()
         .map(GrantedAuthority::getAuthority)
@@ -63,7 +64,9 @@ public class AuthServiceImpl implements AuthService {
     return new AuthResponse(
         details.getUsername(),
         roles,
-        token);
+        accessToken,
+        refreshToken
+    );
   }
 
   /**
@@ -87,11 +90,14 @@ public class AuthServiceImpl implements AuthService {
     User user = userService.findByUsername(username);
     UserDetails details = new CustomUserDetails(user);
 
+    // This is the key change: we validate the refresh token itself.
     if (!jwtUtil.validateToken(jwtToken, details)) {
-      throw new ExpiredTokenException("Token expired or invalid");
+      throw new ExpiredTokenException("Refresh token expired or invalid");
     }
 
-    String refreshedToken = jwtUtil.refreshToken(jwtToken);
+    // Generate a new pair of access and refresh tokens
+    String newAccessToken = jwtUtil.generateAccessToken(details);
+    String newRefreshToken = jwtUtil.generateRefreshToken(details);
 
     List<String> roles = details.getAuthorities().stream()
         .map(GrantedAuthority::getAuthority)
@@ -100,7 +106,9 @@ public class AuthServiceImpl implements AuthService {
     return new AuthResponse(
         details.getUsername(),
         roles,
-        refreshedToken);
+        newAccessToken,
+        newRefreshToken
+    );
   }
 
   /**

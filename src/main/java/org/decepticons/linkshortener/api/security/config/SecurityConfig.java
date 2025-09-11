@@ -56,7 +56,8 @@ public class SecurityConfig {
                 "/api/v1/health",
                 "/swagger-ui/**",
                 "/v3/api-docs/**",
-                "/h2-console/**")        // ADD: allow H2 console)
+              "/h2-console/**",
+                "/api/links/**")        // ADD: allow H2 console)
             .permitAll()
             .requestMatchers(
                 HttpMethod.GET,

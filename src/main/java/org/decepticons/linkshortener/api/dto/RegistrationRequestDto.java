@@ -3,17 +3,18 @@ package org.decepticons.linkshortener.api.dto;
 import lombok.Data;
 
 /**
- * DTO representing login credentials.
+ * DTO for user registration request.
  */
 @Data
-public class AuthRequest {
+public class RegistrationRequestDto {
+
   /**
-   * The username provided for login.
+   * Desired username of the new user.
    */
   private String username;
 
   /**
-   * The password provided for login.
+   * Desired password of the new user.
    */
   private String password;
 }

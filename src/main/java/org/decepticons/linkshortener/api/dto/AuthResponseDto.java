@@ -1,10 +1,9 @@
 package org.decepticons.linkshortener.api.dto;
 
+import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.List;
 
 /**
  * Represents an authentication response returned to the client
@@ -13,7 +12,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class AuthResponse {
+public class AuthResponseDto {
 
   /**
    * The username of the authenticated user.
@@ -43,7 +42,7 @@ public class AuthResponse {
    * @param accessTokenParam       the JWT access token
    * @param refreshTokenParam      the JWT refresh token
    */
-  public AuthResponse(final String usernameParam,
+  public AuthResponseDto(final String usernameParam,
       final List<String> rolesParam,
       final String accessTokenParam,
       final String refreshTokenParam) {

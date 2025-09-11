@@ -171,7 +171,7 @@ public class LinkService {
   }
 
   /**
-   * Marks a link as inactive (soft delete) if it belongs to the currently authenticated user.
+   * Deletes a link from the database if it belongs to the currently authenticated user.
    *
    * @param linkId the unique identifier of the link to delete
    */
@@ -179,10 +179,8 @@ public class LinkService {
     UUID userId = getCurrentUserId();
     linkRepository.findById(linkId)
         .filter(link -> link.getOwner().getId().equals(userId))
-        .ifPresent(link -> {
-          link.setStatus(LinkStatus.INACTIVE);
-          linkRepository.save(link);
-        });
+        .ifPresent(linkRepository::delete);
+
   }
 
   /**

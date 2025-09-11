@@ -24,6 +24,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtTokenUtil {
 
+  /** The number of milliseconds in a second. */
+  private static final long MILLISECONDS_IN_A_SECOND = 1000L;
+
   /** The signing key. */
   private final Key signingKey;
 
@@ -38,7 +41,8 @@ public class JwtTokenUtil {
    *
    * @param secretValue            the secret key for signing JWT tokens
    * @param expirationSecondsValue the access token validity duration in seconds
-   * @param refreshExpirationValue the refresh token validity duration in seconds
+   * @param refreshExpirationValue the refresh token validity
+   *                               duration in seconds
    */
   public JwtTokenUtil(
       @Value("${JWT_SECRET}") final String secretValue,
@@ -68,7 +72,10 @@ public class JwtTokenUtil {
    */
   public String generateRefreshToken(final UserDetails userDetails) {
     Map<String, Object> claims = new HashMap<>();
-    return createToken(claims, userDetails.getUsername(), refreshExpirationSeconds);
+    return createToken(
+        claims,
+        userDetails.getUsername(),
+        refreshExpirationSeconds);
   }
 
   /**
@@ -78,10 +85,13 @@ public class JwtTokenUtil {
    * @param userDetails the user details to validate against.
    * @return true if the token is valid, false otherwise.
    */
-  public boolean validateToken(final String token, final UserDetails userDetails) {
+  public boolean validateToken(
+      final String token,
+      final UserDetails userDetails) {
     try {
       final String username = extractUsername(token);
-      return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+      return (username.equals(userDetails.getUsername())
+          && !isTokenExpired(token));
     } catch (JwtException | IllegalArgumentException e) {
       return false;
     }
@@ -106,7 +116,9 @@ public class JwtTokenUtil {
    *     from the token's claims
    * @return the extracted claim
    */
-  public <T> T extractClaim(final String token, final Function<Claims, T> claimsResolver) {
+  public <T> T extractClaim(
+      final String token,
+      final Function<Claims, T> claimsResolver) {
     final Claims claims = extractAllClaims(token);
     return claimsResolver.apply(claims);
   }
@@ -126,19 +138,20 @@ public class JwtTokenUtil {
    *
    * @param claims the claims to be included in the token.
    * @param subject the subject of the token (usually the username).
-   * @param expirationSeconds the token validity in seconds.
+   * @param expirationSecondsParam the token validity in seconds.
    * @return the built JWT token string.
    */
   private String createToken(
       final Map<String, Object> claims,
       final String subject,
-      final long expirationSeconds
+      final long expirationSecondsParam
   ) {
     return Jwts.builder()
         .setClaims(claims)
         .setSubject(subject)
         .setIssuedAt(new Date(System.currentTimeMillis()))
-        .setExpiration(new Date(System.currentTimeMillis() + expirationSeconds * 1000))
+        .setExpiration(new Date(System.currentTimeMillis()
+            + expirationSecondsParam * MILLISECONDS_IN_A_SECOND))
         .signWith(signingKey, SignatureAlgorithm.HS256)
         .compact();
   }

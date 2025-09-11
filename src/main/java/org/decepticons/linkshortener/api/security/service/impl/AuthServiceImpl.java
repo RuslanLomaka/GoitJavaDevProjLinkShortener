@@ -49,8 +49,8 @@ public class AuthServiceImpl implements AuthService {
   public AuthResponseDto login(final AuthRequestDto request) {
     Authentication auth = authManager.authenticate(
         new UsernamePasswordAuthenticationToken(
-            request.getUsername(),
-            request.getPassword())
+            request.username(),
+            request.password())
     );
 
     UserDetails details = (UserDetails) auth.getPrincipal();

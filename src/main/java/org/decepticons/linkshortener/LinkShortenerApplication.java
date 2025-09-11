@@ -2,6 +2,7 @@ package org.decepticons.linkshortener;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 
 /**
  * Entry point for the Link Shortener application.
@@ -9,6 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * {@link SpringApplication#run(Class, String...)}.
  * </p>
  */
+@EnableCaching
 @SpringBootApplication
 public class LinkShortenerApplication {
 

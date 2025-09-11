@@ -44,7 +44,7 @@ public class AuthController {
   }
 
   /**
-   * Authenticates a user and returns JWT tokens.
+   * Authenticates a user and returns JWT token.
    *
    * @param request the login request
    * @return authentication response with JWT token

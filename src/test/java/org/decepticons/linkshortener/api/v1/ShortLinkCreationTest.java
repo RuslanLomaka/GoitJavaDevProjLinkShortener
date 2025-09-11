@@ -2,8 +2,8 @@ package org.decepticons.linkshortener.api.v1;
 
 
 import org.decepticons.linkshortener.api.controller.LinkController;
-import org.decepticons.linkshortener.api.dto.LinkResponse;
-import org.decepticons.linkshortener.api.dto.UrlRequest;
+import org.decepticons.linkshortener.api.dto.LinkResponseDto;
+import org.decepticons.linkshortener.api.dto.UrlRequestDto;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.decepticons.linkshortener.api.service.LinkService;
@@ -21,7 +21,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -52,18 +51,18 @@ class ShortLinkCreationTest {
 
   @Test
   void testCreateShortLink_Success() {
-    UrlRequest urlRequest = new UrlRequest();
-    urlRequest.setUrl("https://example.com/some/long/url");
+    UrlRequestDto urlRequestDto = new UrlRequestDto();
+    urlRequestDto.setUrl("https://example.com/some/long/url");
 
     User fakeUser = new User();
     fakeUser.setId(UUID.randomUUID());
     fakeUser.setUsername("someName");
 
 
-    LinkResponse fakeResponse = new LinkResponse(
+    LinkResponseDto fakeResponse = new LinkResponseDto(
         UUID.randomUUID(),
         "abc123",
-        urlRequest.getUrl(),
+        urlRequestDto.getUrl(),
         Instant.now(),
         Instant.now().plus(2, ChronoUnit.DAYS),
         0,
@@ -73,9 +72,9 @@ class ShortLinkCreationTest {
 
 
     Mockito.when(userRepository.findByUsername("someName")).thenReturn(java.util.Optional.of(fakeUser));
-    Mockito.when(linkService.createLink(urlRequest, fakeUser)).thenReturn(fakeResponse);
+    Mockito.when(linkService.createLink(urlRequestDto, fakeUser)).thenReturn(fakeResponse);
 
-    ResponseEntity<LinkResponse> response = linkController.createLink(urlRequest);
+    ResponseEntity<LinkResponseDto> response = linkController.createLink(urlRequestDto);
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
     assertEquals("abc123", response.getBody().code());
@@ -83,20 +82,20 @@ class ShortLinkCreationTest {
 
 
     Mockito.verify(userRepository).findByUsername("someName");
-    Mockito.verify(linkService).createLink(urlRequest, fakeUser);
+    Mockito.verify(linkService).createLink(urlRequestDto, fakeUser);
 
   }
 
 
   @Test
   void testCreateShortLink_UserNotFound() {
-    UrlRequest urlRequest = new UrlRequest();
-    urlRequest.setUrl("https://example.com/some/long/url");
+    UrlRequestDto urlRequestDto = new UrlRequestDto();
+    urlRequestDto.setUrl("https://example.com/some/long/url");
 
     Mockito.when(userRepository.findByUsername("someName")).thenReturn(java.util.Optional.empty());
 
     try {
-      linkController.createLink(urlRequest);
+      linkController.createLink(urlRequestDto);
     } catch (Exception e) {
       assertEquals("No such user found in the system: someName", e.getMessage());
     }

@@ -19,7 +19,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class UrlRequest {
+public class UrlRequestDto {
   @Pattern(regexp = "https?://.+", message = "URL must start with http:// or https://")
   @NotBlank
   private String url;
@@ -27,6 +27,6 @@ public class UrlRequest {
   /**
    * Default constructor required for deserialization by frameworks like Jackson.
    */
-  public UrlRequest() {
+  public UrlRequestDto() {
   }
 }

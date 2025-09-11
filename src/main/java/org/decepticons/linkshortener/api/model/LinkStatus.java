@@ -9,9 +9,6 @@ package org.decepticons.linkshortener.api.model;
  * <ul>
  *   <li>{@code ACTIVE} – Link is valid and redirects normally.</li>
  *   <li>{@code INACTIVE} – Link is temporarily disabled and must not redirect.</li>
- *   <li>{@code EXPIRED} – Link has passed its expiration date ({@code expiresAt}).</li>
- *   <li>{@code DELETED} – Link was removed by the owner or system cleanup.</li>
- *   <li>{@code BANNED} – Link disabled due to violation (e.g., malicious/spam).</li>
  * </ul>
  *
  * @since 1.0

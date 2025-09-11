@@ -2,11 +2,14 @@ package org.decepticons.linkshortener.api.security.service.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.decepticons.linkshortener.api.dto.AuthRequestDto;
+import org.decepticons.linkshortener.api.dto.RegistrationRequest;
+import org.decepticons.linkshortener.api.exceptions.InvalidPasswordException;
+import org.decepticons.linkshortener.api.exceptions.UserAlreadyExistsException;
+import org.decepticons.linkshortener.api.exceptions.UserNotFoundException;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.decepticons.linkshortener.api.security.service.UserAuthService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.decepticons.linkshortener.api.util.PasswordValidator;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -34,18 +37,22 @@ public class UserAuthServiceImpl implements UserAuthService {
    */
   @Override
   @Transactional
-  public String registerUser(final AuthRequestDto request) {
-    String username = request.username();
+  public String registerUser(final RegistrationRequest request) {
+    String username = request.getUsername();
 
     if (userRepository.existsByUsername(username)) {
-      throw new IllegalArgumentException(
-          "User with username '%s' already exists".formatted(username)
+      throw new UserAlreadyExistsException(username);
+    }
+
+    if (!PasswordValidator.isValid(request.getPassword())) {
+      throw new InvalidPasswordException(
+          "Password does not meet complexity requirements"
       );
     }
 
     User newUser = new User();
     newUser.setUsername(username);
-    newUser.setPasswordHash(passwordEncoder.encode(request.password()));
+    newUser.setPasswordHash(passwordEncoder.encode(request.getPassword()));
 
     userRepository.save(newUser);
 
@@ -57,13 +64,12 @@ public class UserAuthServiceImpl implements UserAuthService {
    *
    * @param username the username to search for
    * @return the User entity
-   * @throws UsernameNotFoundException if no user is found
+   * @throws UserNotFoundException if no user is found
    */
   @Override
   public User findByUsername(final String username) {
     return userRepository.findByUsername(username)
-        .orElseThrow(() -> new UsernameNotFoundException(
-            "User not found with username: " + username)
+        .orElseThrow(() -> new UserNotFoundException(username)
         );
   }
 }

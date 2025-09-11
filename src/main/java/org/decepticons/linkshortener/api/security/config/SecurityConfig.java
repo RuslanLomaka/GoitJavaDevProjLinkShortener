@@ -10,7 +10,9 @@ import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.decepticons.linkshortener.api.security.jwt.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -57,6 +59,10 @@ public class SecurityConfig {
               "/h2-console/**",
                 "/api/links/**")        // ADD: allow H2 console)
             .permitAll()
+            .requestMatchers(
+                HttpMethod.GET,
+                "/api/v1/urls"
+            ).permitAll()
             .anyRequest().authenticated()
         )
         .headers(headers -> headers.frameOptions(
@@ -91,7 +97,7 @@ public class SecurityConfig {
    */
 
   @Bean
-  public UserDetailsService   userDetailsService(
+  public UserDetailsService userDetailsService(
       final UserRepository userRepository
   ) {
     return username -> {
@@ -105,5 +111,19 @@ public class SecurityConfig {
           .password(user.getPasswordHash())
           .build();
     };
+  }
+
+  /**
+   * Provides the {@link AuthenticationManager} bean.
+   *
+   * @param authenticationConfiguration authentication configuration
+   * @return the {@link AuthenticationManager} bean
+   * @throws Exception if the manager cannot be retrieved
+   */
+  @Bean
+  public AuthenticationManager authenticationManager(
+      final AuthenticationConfiguration authenticationConfiguration
+  ) throws Exception {
+    return authenticationConfiguration.getAuthenticationManager();
   }
 }

@@ -2,16 +2,28 @@ package org.decepticons.linkshortener.api.service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Random;
 import org.decepticons.linkshortener.api.dto.LinkResponseDto;
 import org.decepticons.linkshortener.api.dto.UrlRequestDto;
 import org.decepticons.linkshortener.api.exception.NoSuchShortLinkFoundInTheSystemException;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import org.decepticons.linkshortener.api.dto.LinkResponse;
+import org.decepticons.linkshortener.api.dto.UrlRequest;
+import org.decepticons.linkshortener.api.exception.NoSuchUserFoundInTheSystem;
 import org.decepticons.linkshortener.api.model.Link;
 import org.decepticons.linkshortener.api.model.LinkStatus;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.repository.LinkRepository;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.decepticons.linkshortener.api.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +39,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class LinkService {
 
   private final LinkRepository linkRepository;
+  private final UserRepository userRepository;
   private final Random random = new Random();
+
 
   /**
    * Creates a new {@code LinkService}.
@@ -35,9 +49,11 @@ public class LinkService {
    * @param linkRepository repository used to persist and load {@link Link} entities
    */
 
-  public LinkService(LinkRepository linkRepository) {
+  public LinkService(LinkRepository linkRepository, UserRepository userRepository) {
     this.linkRepository = linkRepository;
+    this.userRepository = userRepository;
   }
+
 
 
   /**
@@ -85,7 +101,7 @@ public class LinkService {
 
 
   /**
-   * Maps a {@link Link} JPA entity to a transport-friendly {@link LinkResponseDto}.
+   * Maps a {@link Link} JPA entity to a transport-friendly {@link LinkResponse}.
    *
    * @param link the entity to map
    * @return a response DTO with the most relevant fields
@@ -103,6 +119,7 @@ public class LinkService {
         link.getOwner().getId()
     );
   }
+
 
 
   /**
@@ -170,4 +187,62 @@ public class LinkService {
     return mapToResponse(link);
   }
 
+  /**
+   * Retrieves all links of the currently authenticated user with pagination.
+   *
+   * @param page the page number to retrieve (0-based)
+   * @param size the number of records per page
+   * @return a {@link Page} of {@link LinkResponse} objects representing all user's links
+   */
+  public Page<LinkResponse> getAllMyLinks(int page, int size) {
+    UUID userId = getCurrentUserId();
+    Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+    return linkRepository.findAllByOwnerId(userId, pageable)
+        .map(this::mapToResponse);
+  }
+
+  /**
+   * Retrieves all active links of the currently authenticated user with pagination.
+   *
+   * @param page the page number to retrieve (0-based)
+   * @param size the number of records per page
+   * @return a {@link Page} of {@link LinkResponse} objects representing active user's links
+   */
+  public Page<LinkResponse> getAllMyActiveLinks(int page, int size) {
+    UUID userId = getCurrentUserId();
+    Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+    return linkRepository.findAllByOwnerIdAndStatus(userId, LinkStatus.ACTIVE, pageable)
+        .map(this::mapToResponse);
+  }
+
+  /**
+   * Marks a link as inactive (soft delete) if it belongs to the currently authenticated user.
+   *
+   * @param linkId the unique identifier of the link to delete
+   */
+  public void deleteLink(UUID linkId) {
+    UUID userId = getCurrentUserId();
+    linkRepository.findById(linkId)
+        .filter(link -> link.getOwner().getId().equals(userId))
+        .ifPresent(link -> {
+          link.setStatus(LinkStatus.INACTIVE);
+          linkRepository.save(link);
+        });
+  }
+
+  /**
+   * Retrieves the UUID of the currently authenticated user from the security context.
+   *
+   * @return the UUID of the authenticated user
+   */
+  private UUID getCurrentUserId() {
+    String username = SecurityContextHolder.getContext().getAuthentication().getName();
+    User user = userRepository.findByUsername(username)
+        .orElseThrow(() -> new NoSuchUserFoundInTheSystem(
+            "No such user found in the system: " + username,
+            username
+        ));
+    return user.getId();
+  }
 }
+

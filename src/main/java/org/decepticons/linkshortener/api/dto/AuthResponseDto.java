@@ -2,8 +2,10 @@ package org.decepticons.linkshortener.api.dto;
 
 import java.util.Collection;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.security.core.GrantedAuthority;
+
+import java.util.List;
 
 /**
  * Represents an authentication response returned to the client
@@ -11,6 +13,7 @@ import org.springframework.security.core.GrantedAuthority;
  */
 @Getter
 @Setter
+@NoArgsConstructor
 public class AuthResponseDto {
 
   /**
@@ -19,27 +22,35 @@ public class AuthResponseDto {
   private String username;
 
   /**
-   * Authorities granted to the authenticated user.
+   * Roles (authorities) granted to the authenticated user.
    */
-  private Collection<? extends GrantedAuthority> authorities;
+  private List<String> roles;
 
   /**
-   * JWT token for authentication.
+   * JWT access token for API authentication.
    */
-  private String token;
+  private String accessToken;
+
+  /**
+   * JWT refresh token for obtaining a new access token.
+   */
+  private String refreshToken;
 
   /**
    * Creates a new AuthResponse.
    *
    * @param usernameParam    the username of the authenticated user
-   * @param authoritiesParam the authorities granted to the user
-   * @param tokenParam       the JWT token
+   * @param rolesParam       the authorities granted to the user
+   * @param accessTokenParam       the JWT access token
+   * @param refreshTokenParam      the JWT refresh token
    */
   public AuthResponseDto(final String usernameParam,
-                         final Collection<? extends GrantedAuthority> authoritiesParam,
-                         final String tokenParam) {
+      final List<String> rolesParam,
+      final String accessTokenParam,
+      final String refreshTokenParam) {
     this.username = usernameParam;
-    this.authorities = authoritiesParam;
-    this.token = tokenParam;
+    this.roles = rolesParam;
+    this.accessToken = accessTokenParam;
+    this.refreshToken = refreshTokenParam;
   }
 }

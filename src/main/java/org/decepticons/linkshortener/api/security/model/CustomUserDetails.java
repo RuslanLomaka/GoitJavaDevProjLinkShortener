@@ -41,6 +41,9 @@ public final class CustomUserDetails implements UserDetails {
    */
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
+    if (user.getStatus() == null) {
+      return Collections.emptyList();
+    }
     // For this example, we return a single, hardcoded role.
     return Collections.singletonList(
         () -> "ROLE_" + user.getStatus().name()

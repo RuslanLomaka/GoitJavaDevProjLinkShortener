@@ -1,8 +1,12 @@
 package org.decepticons.linkshortener.api.security.service.impl;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.decepticons.linkshortener.api.dto.AuthRequestDto;
-import org.decepticons.linkshortener.api.dto.AuthResponseDto;
+import org.decepticons.linkshortener.api.dto.AuthRequest;
+import org.decepticons.linkshortener.api.dto.AuthResponse;
+import org.decepticons.linkshortener.api.dto.RegistrationRequest;
+import org.decepticons.linkshortener.api.exceptions.ExpiredTokenException;
+import org.decepticons.linkshortener.api.exceptions.InvalidTokenException;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.security.jwt.JwtTokenUtil;
 import org.decepticons.linkshortener.api.security.model.CustomUserDetails;
@@ -11,6 +15,7 @@ import org.decepticons.linkshortener.api.security.service.UserAuthService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -35,26 +40,33 @@ public class AuthServiceImpl implements AuthService {
   private final JwtTokenUtil jwtUtil;
 
   /**
-   * Authenticates a user and generates a JWT token.
+   * Authenticates a user and generates JWT tokens.
    *
    * @param request the authentication request containing username and password
-   * @return authentication response with JWT token
+   * @return authentication response with JWT tokens
    */
   @Override
-  public AuthResponseDto login(final AuthRequestDto request) {
+  public AuthResponse login(final AuthRequest request) {
     Authentication auth = authManager.authenticate(
         new UsernamePasswordAuthenticationToken(
-            request.username(),
-            request.password())
+            request.getUsername(),
+            request.getPassword())
     );
 
     UserDetails details = (UserDetails) auth.getPrincipal();
-    String token = jwtUtil.generateToken(details);
+    String accessToken = jwtUtil.generateAccessToken(details);
+    String refreshToken = jwtUtil.generateRefreshToken(details);
 
-    return new AuthResponseDto(
+    List<String> roles = details.getAuthorities().stream()
+        .map(GrantedAuthority::getAuthority)
+        .toList();
+
+    return new AuthResponse(
         details.getUsername(),
-        details.getAuthorities(),
-        token);
+        roles,
+        accessToken,
+        refreshToken
+    );
   }
 
   /**
@@ -64,10 +76,12 @@ public class AuthServiceImpl implements AuthService {
    * @return authentication response with refreshed JWT token
    */
   @Override
-  public AuthResponseDto refreshToken(final String authorizationHeader) {
+  public AuthResponse refreshToken(final String authorizationHeader) {
     if (authorizationHeader == null
         || !authorizationHeader.startsWith(BEARER_PREFIX)) {
-      throw new IllegalArgumentException("Invalid or missing token");
+      throw new InvalidTokenException(
+          "Missing or malformed Authorization header"
+      );
     }
 
     String jwtToken = authorizationHeader.substring(BEARER_PREFIX.length());
@@ -76,15 +90,25 @@ public class AuthServiceImpl implements AuthService {
     User user = userService.findByUsername(username);
     UserDetails details = new CustomUserDetails(user);
 
+    // This is the key change: we validate the refresh token itself.
     if (!jwtUtil.validateToken(jwtToken, details)) {
-      throw new IllegalArgumentException("Token expired or invalid");
+      throw new ExpiredTokenException("Refresh token expired or invalid");
     }
 
-    String refreshedToken = jwtUtil.refreshToken(jwtToken);
-    return new AuthResponseDto(
+    // Generate a new pair of access and refresh tokens
+    String newAccessToken = jwtUtil.generateAccessToken(details);
+    String newRefreshToken = jwtUtil.generateRefreshToken(details);
+
+    List<String> roles = details.getAuthorities().stream()
+        .map(GrantedAuthority::getAuthority)
+        .toList();
+
+    return new AuthResponse(
         details.getUsername(),
-        details.getAuthorities(),
-        refreshedToken);
+        roles,
+        newAccessToken,
+        newRefreshToken
+    );
   }
 
   /**
@@ -94,7 +118,7 @@ public class AuthServiceImpl implements AuthService {
    * @return the username of the newly registered user
    */
   @Override
-  public String registerUser(final AuthRequestDto request) {
+  public String registerUser(final RegistrationRequest request) {
     return userService.registerUser(request);
   }
 }

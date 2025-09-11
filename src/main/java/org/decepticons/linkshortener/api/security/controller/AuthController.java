@@ -1,7 +1,12 @@
 package org.decepticons.linkshortener.api.security.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.decepticons.linkshortener.api.dto.AuthRequest;
+import org.decepticons.linkshortener.api.dto.AuthResponse;
+import org.decepticons.linkshortener.api.dto.RegistrationRequest;
 import org.decepticons.linkshortener.api.dto.AuthRequestDto;
 import org.decepticons.linkshortener.api.dto.AuthResponseDto;
 import org.decepticons.linkshortener.api.security.service.AuthService;
@@ -16,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
  * REST controller for user authentication.
  * Provides endpoints for registration, login, and token refresh.
  */
+@Tag(name = "Authentication", description = "User authentication and management")
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -31,11 +37,11 @@ public class AuthController {
    * @return the username of the newly created user
    */
   @PostMapping("/register")
+  @Operation(summary = "Register a new user")
   public ResponseEntity<String> createUser(
-      @Valid @RequestBody final AuthRequestDto request
+      @Valid @RequestBody final RegistrationRequest request
   ) {
     String username = authService.registerUser(request);
-
     return ResponseEntity.ok(username);
   }
 
@@ -46,10 +52,11 @@ public class AuthController {
    * @return authentication response with JWT token
    */
   @PostMapping("/login")
-  public ResponseEntity<AuthResponseDto> authenticate(
-      @RequestBody final AuthRequestDto request
+  @Operation(summary = "Log in and get JWT tokens")
+  public ResponseEntity<AuthResponse> authenticate(
+      @RequestBody final AuthRequest request
   ) {
-    AuthResponseDto response = authService.login(request);
+    AuthResponse response = authService.login(request);
     return ResponseEntity.ok(response);
   }
 
@@ -60,10 +67,11 @@ public class AuthController {
    * @return authentication response with refreshed JWT token
    */
   @PostMapping("/refresh")
-  public ResponseEntity<AuthResponseDto> refreshToken(
+  @Operation(summary = "Refresh JWT access token")
+  public ResponseEntity<AuthResponse> refreshToken(
       @RequestHeader("Authorization") final String authHeader
   ) {
-    AuthResponseDto response = authService.refreshToken(authHeader);
+    AuthResponse response = authService.refreshToken(authHeader);
     return ResponseEntity.ok(response);
   }
 }

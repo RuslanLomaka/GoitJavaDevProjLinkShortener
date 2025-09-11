@@ -1,12 +1,22 @@
 package org.decepticons.linkshortener.api.controller;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+
+import java.io.IOException;
+import java.net.URL;
+import java.time.Instant;
 import java.util.Optional;
+
 import org.decepticons.linkshortener.api.dto.LinkResponse;
 import org.decepticons.linkshortener.api.dto.UrlRequest;
+import org.decepticons.linkshortener.api.exception.NoSuchShortLinkFoundInTheSystem;
 import org.decepticons.linkshortener.api.exception.NoSuchUserFoundInTheSystem;
+import org.decepticons.linkshortener.api.exception.ShortLinkIsOutOfDate;
 import org.decepticons.linkshortener.api.model.Link;
+import org.decepticons.linkshortener.api.model.LinkStatus;
 import org.decepticons.linkshortener.api.model.User;
+import org.decepticons.linkshortener.api.model.UserStatus;
 import org.decepticons.linkshortener.api.repository.LinkRepository;
 import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.decepticons.linkshortener.api.service.LinkService;
@@ -34,7 +44,7 @@ public class LinkController {
   /**
    * Constructs a new {@link LinkController} with the given dependencies.
    *
-   * @param linkService the service responsible for link business logic
+   * @param linkService    the service responsible for link business logic
    * @param linkRepository the repository for accessing {@link Link} entities
    * @param userRepository the repository for accessing {@link User} entities
    */
@@ -78,23 +88,26 @@ public class LinkController {
    * @return a redirect response or status code indicating an error
    */
   @GetMapping("/{code}")
-  public ResponseEntity<String> redirect(@PathVariable String code) {
-    Optional<Link> optionalLink = linkRepository.findByCode(code);
+  public void redirect(@PathVariable String code, HttpServletResponse response) throws IOException {
 
-    if (optionalLink.isEmpty()) {
-      return ResponseEntity.notFound().build();
+    Link linkByCode = linkRepository.findByCode(code)
+        .orElseThrow(() -> new NoSuchShortLinkFoundInTheSystem(
+            "No such short link found in the system: " + code,
+            code
+        ));
+
+
+    if (!(linkService.isLinkActive(linkByCode))) {
+
+      linkByCode.setStatus(LinkStatus.INACTIVE);
+
+      throw new ShortLinkIsOutOfDate("Short link is out of date: " + code, code, linkByCode.getExpiresAt());
     }
 
-    Link link = optionalLink.get();
+    String originalUrl = linkByCode.getOriginalUrl();
 
-    if (!linkService.isLinkActive(link)) {
-      return ResponseEntity.status(410).body("Link expired or inactive");
-    }
+    linkService.incrementClicks(linkByCode);
 
-    linkService.incrementClicks(link);
-
-    return ResponseEntity.status(302)
-        .header("Location", link.getOriginalUrl())
-        .build();
+    response.sendRedirect(originalUrl);
   }
 }

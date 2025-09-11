@@ -5,15 +5,15 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
-
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
+
 
 /**
  * Utility class for generating and validating JWT tokens.
@@ -98,7 +98,7 @@ public class JwtTokenUtil {
    * @param <T> the type of the claim to extract
    * @param token the JWT token from which to extract the claim
    * @param claimsResolver a function to resolve a specific claim
-   * from the token's claims
+   *     from the token's claims
    * @return the extracted claim
    */
   public <T> T extractClaim(final String token, final Function<Claims, T> claimsResolver) {
@@ -140,9 +140,11 @@ public class JwtTokenUtil {
 
   /**
    * Extracts all claims from a JWT token.
+   *
    * @param token the JWT token
    * @return the claims
    */
+
   private Claims extractAllClaims(final String token) {
     return Jwts.parserBuilder()
         .setSigningKey(signingKey)
@@ -153,18 +155,22 @@ public class JwtTokenUtil {
 
   /**
    * Checks if a token is expired.
+   *
    * @param token the JWT token
    * @return true if expired, false otherwise
    */
+
   private boolean isTokenExpired(final String token) {
     return extractExpiration(token).before(new Date());
   }
 
   /**
    * Derives a signing key from the secret.
+   *
    * @param secret the secret key as a string
    * @return the signing key
    */
+
   private Key getSignInKey(final String secret) {
     byte[] keyBytes = Decoders.BASE64.decode(secret);
     return Keys.hmacShaKeyFor(keyBytes);

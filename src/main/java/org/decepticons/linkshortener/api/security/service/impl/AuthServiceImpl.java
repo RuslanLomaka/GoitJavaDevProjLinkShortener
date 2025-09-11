@@ -2,9 +2,9 @@ package org.decepticons.linkshortener.api.security.service.impl;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.decepticons.linkshortener.api.dto.AuthRequest;
-import org.decepticons.linkshortener.api.dto.AuthResponse;
-import org.decepticons.linkshortener.api.dto.RegistrationRequest;
+import org.decepticons.linkshortener.api.dto.AuthRequestDto;
+import org.decepticons.linkshortener.api.dto.AuthResponseDto;
+import org.decepticons.linkshortener.api.dto.RegistrationRequestDto;
 import org.decepticons.linkshortener.api.exceptions.ExpiredTokenException;
 import org.decepticons.linkshortener.api.exceptions.InvalidTokenException;
 import org.decepticons.linkshortener.api.model.User;
@@ -46,11 +46,11 @@ public class AuthServiceImpl implements AuthService {
    * @return authentication response with JWT tokens
    */
   @Override
-  public AuthResponse login(final AuthRequest request) {
+  public AuthResponseDto login(final AuthRequestDto request) {
     Authentication auth = authManager.authenticate(
         new UsernamePasswordAuthenticationToken(
-            request.getUsername(),
-            request.getPassword())
+            request.username(),
+            request.password())
     );
 
     UserDetails details = (UserDetails) auth.getPrincipal();
@@ -61,7 +61,7 @@ public class AuthServiceImpl implements AuthService {
         .map(GrantedAuthority::getAuthority)
         .toList();
 
-    return new AuthResponse(
+    return new AuthResponseDto(
         details.getUsername(),
         roles,
         accessToken,
@@ -76,7 +76,7 @@ public class AuthServiceImpl implements AuthService {
    * @return authentication response with refreshed JWT token
    */
   @Override
-  public AuthResponse refreshToken(final String authorizationHeader) {
+  public AuthResponseDto refreshToken(final String authorizationHeader) {
     if (authorizationHeader == null
         || !authorizationHeader.startsWith(BEARER_PREFIX)) {
       throw new InvalidTokenException(
@@ -103,7 +103,7 @@ public class AuthServiceImpl implements AuthService {
         .map(GrantedAuthority::getAuthority)
         .toList();
 
-    return new AuthResponse(
+    return new AuthResponseDto(
         details.getUsername(),
         roles,
         newAccessToken,
@@ -118,7 +118,7 @@ public class AuthServiceImpl implements AuthService {
    * @return the username of the newly registered user
    */
   @Override
-  public String registerUser(final RegistrationRequest request) {
+  public String registerUser(final RegistrationRequestDto request) {
     return userService.registerUser(request);
   }
 }

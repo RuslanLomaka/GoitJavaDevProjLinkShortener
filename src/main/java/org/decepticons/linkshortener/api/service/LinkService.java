@@ -2,23 +2,19 @@ package org.decepticons.linkshortener.api.service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 import org.decepticons.linkshortener.api.dto.LinkResponseDto;
 import org.decepticons.linkshortener.api.dto.UrlRequestDto;
 import org.decepticons.linkshortener.api.exception.NoSuchShortLinkFoundInTheSystemException;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import org.decepticons.linkshortener.api.dto.LinkResponse;
-import org.decepticons.linkshortener.api.dto.UrlRequest;
-import org.decepticons.linkshortener.api.exception.NoSuchUserFoundInTheSystem;
+import org.decepticons.linkshortener.api.exception.NoSuchUserFoundInTheSystemException;
 import org.decepticons.linkshortener.api.model.Link;
 import org.decepticons.linkshortener.api.model.LinkStatus;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.repository.LinkRepository;
+import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -101,7 +97,7 @@ public class LinkService {
 
 
   /**
-   * Maps a {@link Link} JPA entity to a transport-friendly {@link LinkResponse}.
+   * Maps a {@link Link} JPA entity to a transport-friendly {@link LinkResponseDto}.
    *
    * @param link the entity to map
    * @return a response DTO with the most relevant fields
@@ -192,9 +188,9 @@ public class LinkService {
    *
    * @param page the page number to retrieve (0-based)
    * @param size the number of records per page
-   * @return a {@link Page} of {@link LinkResponse} objects representing all user's links
+   * @return a {@link Page} of {@link LinkResponseDto} objects representing all user's links
    */
-  public Page<LinkResponse> getAllMyLinks(int page, int size) {
+  public Page<LinkResponseDto> getAllMyLinks(int page, int size) {
     UUID userId = getCurrentUserId();
     Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
     return linkRepository.findAllByOwnerId(userId, pageable)
@@ -206,9 +202,9 @@ public class LinkService {
    *
    * @param page the page number to retrieve (0-based)
    * @param size the number of records per page
-   * @return a {@link Page} of {@link LinkResponse} objects representing active user's links
+   * @return a {@link Page} of {@link LinkResponseDto} objects representing active user's links
    */
-  public Page<LinkResponse> getAllMyActiveLinks(int page, int size) {
+  public Page<LinkResponseDto> getAllMyActiveLinks(int page, int size) {
     UUID userId = getCurrentUserId();
     Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
     return linkRepository.findAllByOwnerIdAndStatus(userId, LinkStatus.ACTIVE, pageable)
@@ -238,7 +234,7 @@ public class LinkService {
   private UUID getCurrentUserId() {
     String username = SecurityContextHolder.getContext().getAuthentication().getName();
     User user = userRepository.findByUsername(username)
-        .orElseThrow(() -> new NoSuchUserFoundInTheSystem(
+        .orElseThrow(() -> new NoSuchUserFoundInTheSystemException(
             "No such user found in the system: " + username,
             username
         ));

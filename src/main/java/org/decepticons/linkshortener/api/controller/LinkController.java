@@ -3,19 +3,19 @@ package org.decepticons.linkshortener.api.controller;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.io.IOException;
+import java.util.UUID;
 import org.decepticons.linkshortener.api.dto.LinkResponseDto;
 import org.decepticons.linkshortener.api.dto.UrlRequestDto;
 import org.decepticons.linkshortener.api.exception.NoSuchUserFoundInTheSystemException;
 import org.decepticons.linkshortener.api.exception.ShortLinkIsOutOfDateException;
 import org.decepticons.linkshortener.api.model.LinkStatus;
-import java.util.UUID;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.repository.LinkRepository;
 import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.decepticons.linkshortener.api.service.CacheInspectionService;
 import org.decepticons.linkshortener.api.service.LinkService;
-import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -118,7 +118,7 @@ public class LinkController {
    *
    * @param page the page number to retrieve
    * @param size the number of records per page
-   * @return {@link ResponseEntity} containing a {@link Page} of {@link LinkResponse} objects
+   * @return {@link ResponseEntity} containing a {@link Page} of {@link LinkResponseDto} objects
    */
   @GetMapping("/my_all_links")
   public ResponseEntity<Page<LinkResponseDto>> getAllMyLinks(
@@ -133,7 +133,7 @@ public class LinkController {
    *
    * @param page the page number to retrieve
    * @param size the number of records per page
-   * @return a {@link ResponseEntity} containing a {@link Page} of {@link LinkResponse} objects
+   * @return a {@link ResponseEntity} containing a {@link Page} of {@link LinkResponseDto} objects
    */
   @GetMapping("/my_all_active_links")
   public ResponseEntity<Page<LinkResponseDto>> getAllMyActiveLinks(
@@ -148,7 +148,7 @@ public class LinkController {
    *
    * @param id the unique identifier of the link to delete
    * @return a {@link ResponseEntity} with HTTP status 204 (No Content)
-   *     if the deletion was successful
+   *     if the deletion was successful.
    */
   @DeleteMapping("/delete/{id}")
   public ResponseEntity<Void> deleteLink(@PathVariable UUID id) {

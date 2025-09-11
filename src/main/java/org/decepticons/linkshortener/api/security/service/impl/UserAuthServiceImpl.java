@@ -2,7 +2,7 @@ package org.decepticons.linkshortener.api.security.service.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.decepticons.linkshortener.api.dto.RegistrationRequest;
+import org.decepticons.linkshortener.api.dto.RegistrationRequestDto;
 import org.decepticons.linkshortener.api.exceptions.InvalidPasswordException;
 import org.decepticons.linkshortener.api.exceptions.UserAlreadyExistsException;
 import org.decepticons.linkshortener.api.exceptions.UserNotFoundException;
@@ -37,7 +37,7 @@ public class UserAuthServiceImpl implements UserAuthService {
    */
   @Override
   @Transactional
-  public String registerUser(final RegistrationRequest request) {
+  public String registerUser(final RegistrationRequestDto request) {
     String username = request.getUsername();
 
     if (userRepository.existsByUsername(username)) {

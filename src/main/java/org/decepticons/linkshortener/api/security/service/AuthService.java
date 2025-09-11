@@ -13,10 +13,10 @@ public interface AuthService {
 
   /**
    * Authenticates a user using the given login request and
-   * returns an AuthResponse.
+   * returns an AuthResponseDto.
    *
    * @param loginRequest the login data (username and password)
-   * @return an AuthResponse containing JWT token and user details
+   * @return an AuthResponseDto containing JWT token and user details
    */
   AuthResponseDto login(AuthRequestDto loginRequest);
 
@@ -24,7 +24,7 @@ public interface AuthService {
    * Refreshes the JWT token if it is valid and not expired.
    *
    * @param token the JWT token to refresh
-   * @return an AuthResponse with a new JWT token
+   * @return an AuthResponseDto with a new JWT token
    */
   AuthResponseDto refreshToken(String token);
 

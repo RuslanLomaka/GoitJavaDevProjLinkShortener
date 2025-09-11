@@ -81,12 +81,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     jwtToken = authorizationHeader.substring(BEARER_PREFIX.length());
 
-    // Declaration and initialization moved to the point of first use
     final String username = jwtTokenUtil.extractUsername(jwtToken);
 
     if (username != null
         && SecurityContextHolder.getContext().getAuthentication() == null) {
       UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+      if (userDetails == null) {
+        LOG.warn("User with username {} not found", username);
+        filterChain.doFilter(request, response);
+        return;
+      }
 
       if (!jwtTokenUtil.validateToken(jwtToken, userDetails)) {
         throw new InvalidTokenException("Token is expired or invalid");

@@ -1,6 +1,5 @@
 package org.decepticons.linkshortener.api.security.service;
 
-
 import org.decepticons.linkshortener.api.dto.RegistrationRequestDto;
 import org.decepticons.linkshortener.api.model.User;
 

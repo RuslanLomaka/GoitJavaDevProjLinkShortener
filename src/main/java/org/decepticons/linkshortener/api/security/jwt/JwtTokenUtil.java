@@ -1,6 +1,7 @@
 package org.decepticons.linkshortener.api.security.jwt;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -78,8 +79,12 @@ public class JwtTokenUtil {
    * @return true if the token is valid, false otherwise.
    */
   public boolean validateToken(final String token, final UserDetails userDetails) {
-    final String username = extractUsername(token);
-    return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    try {
+      final String username = extractUsername(token);
+      return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    } catch (JwtException | IllegalArgumentException e) {
+      return false;
+    }
   }
 
   /**

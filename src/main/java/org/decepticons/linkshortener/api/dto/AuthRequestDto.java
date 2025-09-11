@@ -6,7 +6,7 @@ import lombok.Data;
  * DTO representing login credentials.
  */
 @Data
-public class AuthRequest {
+public class AuthRequestDto {
   /**
    * The username provided for login.
    */

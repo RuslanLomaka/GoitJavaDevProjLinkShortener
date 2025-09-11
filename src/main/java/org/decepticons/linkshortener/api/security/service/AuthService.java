@@ -1,8 +1,8 @@
 package org.decepticons.linkshortener.api.security.service;
 
-import org.decepticons.linkshortener.api.dto.AuthRequest;
-import org.decepticons.linkshortener.api.dto.AuthResponse;
-import org.decepticons.linkshortener.api.dto.RegistrationRequest;
+import org.decepticons.linkshortener.api.dto.AuthRequestDto;
+import org.decepticons.linkshortener.api.dto.AuthResponseDto;
+import org.decepticons.linkshortener.api.dto.RegistrationRequestDto;
 
 
 /**
@@ -13,20 +13,20 @@ public interface AuthService {
 
   /**
    * Authenticates a user using the given login request and
-   * returns an AuthResponse.
+   * returns an AuthResponseDto.
    *
    * @param loginRequest the login data (username and password)
-   * @return an AuthResponse containing JWT token and user details
+   * @return an AuthResponseDto containing JWT token and user details
    */
-  AuthResponse login(AuthRequest loginRequest);
+  AuthResponseDto login(AuthRequestDto loginRequest);
 
   /**
    * Refreshes the JWT token if it is valid and not expired.
    *
    * @param token the JWT token to refresh
-   * @return an AuthResponse with a new JWT token
+   * @return an AuthResponseDto with a new JWT token
    */
-  AuthResponse refreshToken(String token);
+  AuthResponseDto refreshToken(String token);
 
   /**
    * Registers a new user based on the given registration request.
@@ -34,5 +34,5 @@ public interface AuthService {
    * @param request the registration data (username and password)
    * @return the username of the newly registered user
    */
-  String registerUser(RegistrationRequest request);
+  String registerUser(RegistrationRequestDto request);
 }

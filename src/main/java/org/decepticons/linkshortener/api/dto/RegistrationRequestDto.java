@@ -6,7 +6,7 @@ import lombok.Data;
  * DTO for user registration request.
  */
 @Data
-public class RegistrationRequest {
+public class RegistrationRequestDto {
 
   /**
    * Desired username of the new user.

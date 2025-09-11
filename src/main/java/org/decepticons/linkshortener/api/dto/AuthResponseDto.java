@@ -13,7 +13,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class AuthResponse {
+public class AuthResponseDto {
 
   /**
    * The username of the authenticated user.
@@ -36,14 +36,14 @@ public class AuthResponse {
   private String refreshToken;
 
   /**
-   * Creates a new AuthResponse.
+   * Creates a new AuthResponseDto.
    *
    * @param usernameParam    the username of the authenticated user
    * @param rolesParam       the authorities granted to the user
    * @param accessTokenParam       the JWT access token
    * @param refreshTokenParam      the JWT refresh token
    */
-  public AuthResponse(final String usernameParam,
+  public AuthResponseDto(final String usernameParam,
       final List<String> rolesParam,
       final String accessTokenParam,
       final String refreshTokenParam) {

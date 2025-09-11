@@ -7,7 +7,7 @@ package org.decepticons.linkshortener.api.dto;
  * @param username the username of the user
  * @param password the password of the user
  */
-public record AuthRequest(
+public record AuthRequestDto(
     String username,
     String password
 ) {

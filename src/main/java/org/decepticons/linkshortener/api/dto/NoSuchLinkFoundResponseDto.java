@@ -18,10 +18,9 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class NoSuchLinkFoundResponse {
+public class NoSuchLinkFoundResponseDto {
 
   private String shortLink;
-
   private String message;
 
 }

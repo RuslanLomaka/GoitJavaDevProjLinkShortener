@@ -1,8 +1,8 @@
 package org.decepticons.linkshortener.api.security.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.decepticons.linkshortener.api.dto.AuthRequest;
-import org.decepticons.linkshortener.api.dto.AuthResponse;
+import org.decepticons.linkshortener.api.dto.AuthRequestDto;
+import org.decepticons.linkshortener.api.dto.AuthResponseDto;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.security.jwt.JwtTokenUtil;
 import org.decepticons.linkshortener.api.security.model.CustomUserDetails;
@@ -41,7 +41,7 @@ public class AuthServiceImpl implements AuthService {
    * @return authentication response with JWT token
    */
   @Override
-  public AuthResponse login(final AuthRequest request) {
+  public AuthResponseDto login(final AuthRequestDto request) {
     Authentication auth = authManager.authenticate(
         new UsernamePasswordAuthenticationToken(
             request.username(),
@@ -51,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
     UserDetails details = (UserDetails) auth.getPrincipal();
     String token = jwtUtil.generateToken(details);
 
-    return new AuthResponse(
+    return new AuthResponseDto(
         details.getUsername(),
         details.getAuthorities(),
         token);
@@ -64,7 +64,7 @@ public class AuthServiceImpl implements AuthService {
    * @return authentication response with refreshed JWT token
    */
   @Override
-  public AuthResponse refreshToken(final String authorizationHeader) {
+  public AuthResponseDto refreshToken(final String authorizationHeader) {
     if (authorizationHeader == null
         || !authorizationHeader.startsWith(BEARER_PREFIX)) {
       throw new IllegalArgumentException("Invalid or missing token");
@@ -81,7 +81,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     String refreshedToken = jwtUtil.refreshToken(jwtToken);
-    return new AuthResponse(
+    return new AuthResponseDto(
         details.getUsername(),
         details.getAuthorities(),
         refreshedToken);
@@ -94,7 +94,7 @@ public class AuthServiceImpl implements AuthService {
    * @return the username of the newly registered user
    */
   @Override
-  public String registerUser(final AuthRequest request) {
+  public String registerUser(final AuthRequestDto request) {
     return userService.registerUser(request);
   }
 }

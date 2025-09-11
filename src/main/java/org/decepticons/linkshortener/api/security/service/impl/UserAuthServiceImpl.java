@@ -2,7 +2,7 @@ package org.decepticons.linkshortener.api.security.service.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.decepticons.linkshortener.api.dto.AuthRequest;
+import org.decepticons.linkshortener.api.dto.AuthRequestDto;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.decepticons.linkshortener.api.security.service.UserAuthService;
@@ -34,7 +34,7 @@ public class UserAuthServiceImpl implements UserAuthService {
    */
   @Override
   @Transactional
-  public String registerUser(final AuthRequest request) {
+  public String registerUser(final AuthRequestDto request) {
     String username = request.username();
 
     if (userRepository.existsByUsername(username)) {

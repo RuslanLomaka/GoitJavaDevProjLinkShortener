@@ -18,11 +18,9 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class NoSuchUserFoundResponse {
+public class NoSuchUserFoundResponseDto {
 
   private String username;
-
   private String message;
-
 
 }

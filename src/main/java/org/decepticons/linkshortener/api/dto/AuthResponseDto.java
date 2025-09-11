@@ -11,7 +11,7 @@ import org.springframework.security.core.GrantedAuthority;
  */
 @Getter
 @Setter
-public class AuthResponse {
+public class AuthResponseDto {
 
   /**
    * The username of the authenticated user.
@@ -35,9 +35,9 @@ public class AuthResponse {
    * @param authoritiesParam the authorities granted to the user
    * @param tokenParam       the JWT token
    */
-  public AuthResponse(final String usernameParam,
-      final Collection<? extends GrantedAuthority> authoritiesParam,
-      final String tokenParam) {
+  public AuthResponseDto(final String usernameParam,
+                         final Collection<? extends GrantedAuthority> authoritiesParam,
+                         final String tokenParam) {
     this.username = usernameParam;
     this.authorities = authoritiesParam;
     this.token = tokenParam;

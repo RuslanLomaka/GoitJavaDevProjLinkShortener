@@ -2,24 +2,17 @@ package org.decepticons.linkshortener.api.controller;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-
 import java.io.IOException;
-import java.net.URL;
-import java.time.Instant;
-import java.util.Optional;
-
-import org.decepticons.linkshortener.api.dto.LinkResponse;
-import org.decepticons.linkshortener.api.dto.UrlRequest;
-import org.decepticons.linkshortener.api.exception.NoSuchShortLinkFoundInTheSystem;
-import org.decepticons.linkshortener.api.exception.NoSuchUserFoundInTheSystem;
-import org.decepticons.linkshortener.api.exception.ShortLinkIsOutOfDate;
-import org.decepticons.linkshortener.api.model.Link;
+import org.decepticons.linkshortener.api.dto.LinkResponseDto;
+import org.decepticons.linkshortener.api.dto.UrlRequestDto;
+import org.decepticons.linkshortener.api.exception.NoSuchUserFoundInTheSystemException;
+import org.decepticons.linkshortener.api.exception.ShortLinkIsOutOfDateException;
 import org.decepticons.linkshortener.api.model.LinkStatus;
 import org.decepticons.linkshortener.api.model.User;
-import org.decepticons.linkshortener.api.model.UserStatus;
-import org.decepticons.linkshortener.api.repository.LinkRepository;
 import org.decepticons.linkshortener.api.repository.UserRepository;
+import org.decepticons.linkshortener.api.service.CacheInspectionService;
 import org.decepticons.linkshortener.api.service.LinkService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,21 +31,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class LinkController {
 
   private final LinkService linkService;
-  private final LinkRepository linkRepository;
   private final UserRepository userRepository;
+
+  @Autowired
+  private CacheInspectionService cacheInspectionService;
 
   /**
    * Constructs a new {@link LinkController} with the given dependencies.
    *
    * @param linkService    the service responsible for link business logic
-   * @param linkRepository the repository for accessing {@link Link} entities
    * @param userRepository the repository for accessing {@link User} entities
    */
   public LinkController(LinkService linkService,
-                        LinkRepository linkRepository,
                         UserRepository userRepository) {
     this.linkService = linkService;
-    this.linkRepository = linkRepository;
     this.userRepository = userRepository;
   }
 
@@ -63,20 +55,20 @@ public class LinkController {
    * @return DTO with information about the created short URL
    */
   @PostMapping
-  public ResponseEntity<LinkResponse> createLink(
-      @Valid @RequestBody UrlRequest originalUrl) {
+  public ResponseEntity<LinkResponseDto> createLink(
+      @Valid @RequestBody UrlRequestDto originalUrl) {
 
     String userName = SecurityContextHolder.getContext()
         .getAuthentication()
         .getName();
 
     User user = userRepository.findByUsername(userName)
-        .orElseThrow(() -> new NoSuchUserFoundInTheSystem(
+        .orElseThrow(() -> new NoSuchUserFoundInTheSystemException(
             "No such user found in the system: " + userName,
             userName
         ));
 
-    LinkResponse link = linkService.createLink(originalUrl, user);
+    LinkResponseDto link = linkService.createLink(originalUrl, user);
 
     return ResponseEntity.status(201).body(link);
   }
@@ -85,29 +77,32 @@ public class LinkController {
    * Redirects to the original URL by the given short code.
    *
    * @param code the short URL code
-   * @return a redirect response or status code indicating an error
    */
   @GetMapping("/{code}")
   public void redirect(@PathVariable String code, HttpServletResponse response) throws IOException {
 
-    Link linkByCode = linkRepository.findByCode(code)
-        .orElseThrow(() -> new NoSuchShortLinkFoundInTheSystem(
-            "No such short link found in the system: " + code,
-            code
-        ));
+    LinkResponseDto link = linkService.accessLink(code);
 
-
-    if (!(linkService.isLinkActive(linkByCode))) {
-
-      linkByCode.setStatus(LinkStatus.INACTIVE);
-
-      throw new ShortLinkIsOutOfDate("Short link is out of date: " + code, code, linkByCode.getExpiresAt());
+    if (link.status().equalsIgnoreCase(LinkStatus.INACTIVE.name())) {
+      throw new ShortLinkIsOutOfDateException(
+          "Short link is out of date: " + code,
+          code,
+          link.expiresAt()
+      );
     }
 
-    String originalUrl = linkByCode.getOriginalUrl();
+    response.sendRedirect(link.originalUrl());
+  }
 
-    linkService.incrementClicks(linkByCode);
-
-    response.sendRedirect(originalUrl);
+  /**
+   * Endpoint to inspect the contents of the short links cache.
+   * This is primarily for debugging and monitoring purposes.
+   * </p>
+   * Note: In a production environment, access to this endpoint should be
+   * restricted to authorized personnel only, as it may expose sensitive data.
+   */
+  @GetMapping("/cache")
+  public void inspectCache() {
+    cacheInspectionService.printCache("shortLinksCache");
   }
 }

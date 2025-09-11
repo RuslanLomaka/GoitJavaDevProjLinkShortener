@@ -6,7 +6,7 @@ import lombok.Data;
  * DTO representing a user response.
  */
 @Data
-public class UserResponse {
+public class UserResponseDto {
 
   /**
    * The username of the user.

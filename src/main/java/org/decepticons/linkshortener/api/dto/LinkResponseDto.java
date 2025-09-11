@@ -17,7 +17,7 @@ import java.util.UUID;
  * @param status the current status of the link (e.g., ACTIVE, INACTIVE)
  * @param ownerId the unique identifier of the user who owns this link
  */
-public record LinkResponse(
+public record LinkResponseDto(
     UUID id,
     String code,
     String originalUrl,

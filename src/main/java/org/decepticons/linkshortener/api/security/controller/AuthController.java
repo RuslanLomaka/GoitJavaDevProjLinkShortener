@@ -2,8 +2,8 @@ package org.decepticons.linkshortener.api.security.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.decepticons.linkshortener.api.dto.AuthRequest;
-import org.decepticons.linkshortener.api.dto.AuthResponse;
+import org.decepticons.linkshortener.api.dto.AuthRequestDto;
+import org.decepticons.linkshortener.api.dto.AuthResponseDto;
 import org.decepticons.linkshortener.api.security.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,9 +32,10 @@ public class AuthController {
    */
   @PostMapping("/register")
   public ResponseEntity<String> createUser(
-      @Valid @RequestBody final AuthRequest request
+      @Valid @RequestBody final AuthRequestDto request
   ) {
     String username = authService.registerUser(request);
+
     return ResponseEntity.ok(username);
   }
 
@@ -45,10 +46,10 @@ public class AuthController {
    * @return authentication response with JWT token
    */
   @PostMapping("/login")
-  public ResponseEntity<AuthResponse> authenticate(
-      @RequestBody final AuthRequest request
+  public ResponseEntity<AuthResponseDto> authenticate(
+      @RequestBody final AuthRequestDto request
   ) {
-    AuthResponse response = authService.login(request);
+    AuthResponseDto response = authService.login(request);
     return ResponseEntity.ok(response);
   }
 
@@ -59,10 +60,10 @@ public class AuthController {
    * @return authentication response with refreshed JWT token
    */
   @PostMapping("/refresh")
-  public ResponseEntity<AuthResponse> refreshToken(
+  public ResponseEntity<AuthResponseDto> refreshToken(
       @RequestHeader("Authorization") final String authHeader
   ) {
-    AuthResponse response = authService.refreshToken(authHeader);
+    AuthResponseDto response = authService.refreshToken(authHeader);
     return ResponseEntity.ok(response);
   }
 }

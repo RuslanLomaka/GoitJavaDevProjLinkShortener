@@ -1,10 +1,9 @@
 {
 	"info": {
-		"_postman_id": "57ee5e48-48e1-4f16-bffb-7f37256b6115",
+		"_postman_id": "f71610e2-9b1d-48a4-9a86-3807272a7e18",
 		"name": "Link shortener",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "30091073",
-		"_collection_link": "https://team-5861.postman.co/workspace/Decepticons~c4fc3b19-5ee9-4359-9a0e-dfd23e119b0a/collection/30091073-57ee5e48-48e1-4f16-bffb-7f37256b6115?action=share&source=collection_link&creator=30091073"
+		"_exporter_id": "43658247"
 	},
 	"item": [
 		{
@@ -133,6 +132,106 @@
 					"path": [
 						"auth",
 						"refresh"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add link",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlcjEiLCJpYXQiOjE3NTc2MTY3ODAsImV4cCI6MTc1NzYyMDM4MH0.JPOQIjd8q4aiV6vYI5sApmS7RVmzmdn6j8dcyBTdmwU",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"url\": \"https://github.com/RuslanLomaka/GoitJavaDevProjLinkShortener\"\r\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/auth/api/links",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"auth",
+						"api",
+						"links"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Forward by link",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "My links",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlcjEiLCJpYXQiOjE3NTc2MTkwMzMsImV4cCI6MTc1NzYyMjYzM30.5K9GRMiGptBQgyIxOGMWSMmJeADu80kIkPbeL_KSPac",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/links/my_all_links",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"links",
+						"my_all_links"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete link by id",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlcjEiLCJpYXQiOjE3NTc2MTkwMzMsImV4cCI6MTc1NzYyMjYzM30.5K9GRMiGptBQgyIxOGMWSMmJeADu80kIkPbeL_KSPac",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/links/delete/8d426643-ed03-42cf-9eb5-20d25800223c",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"links",
+						"delete",
+						"8d426643-ed03-42cf-9eb5-20d25800223c"
 					]
 				}
 			},

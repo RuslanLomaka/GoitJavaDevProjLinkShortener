@@ -1,7 +1,8 @@
 package org.decepticons.linkshortener.api.service;
 
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
@@ -12,9 +13,19 @@ import org.springframework.stereotype.Service;
 @Service
 public class CacheInspectionService {
 
-  @Autowired
-  private CacheManager cacheManager;
 
+  private final CacheManager cacheManager;
+  private final Logger logger = LoggerFactory.getLogger(CacheInspectionService.class);
+
+  /**
+   * Constructs a CacheInspectionService with the given CacheManager.
+   *
+   * @param cacheManager the CacheManager to use for accessing caches
+   */
+
+  public CacheInspectionService(CacheManager cacheManager) {
+    this.cacheManager = cacheManager;
+  }
 
   /**
    * Prints the contents of the specified cache to the console.
@@ -24,10 +35,10 @@ public class CacheInspectionService {
   public void printCache(String cacheName) {
     Cache cache = cacheManager.getCache(cacheName);
     if (cache != null) {
-      System.out.println("Cache Name: " + cacheName);
-      System.out.println("Cache Content: " + cache.getNativeCache().toString());
+      logger.debug("Cache Name: {}", cacheName);
+      logger.debug("Cache Content: {}", cache.getNativeCache());
     } else {
-      System.out.println("Cache with name " + cacheName + " not found.");
+      logger.debug("Cache with name {} not found", cacheName);
     }
   }
 

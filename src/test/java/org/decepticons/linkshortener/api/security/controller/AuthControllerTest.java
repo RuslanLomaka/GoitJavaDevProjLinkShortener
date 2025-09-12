@@ -1,6 +1,7 @@
 package org.decepticons.linkshortener.api.security.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.decepticons.linkshortener.api.controller.AuthController;
 import org.decepticons.linkshortener.api.dto.AuthRequestDto;
 import org.decepticons.linkshortener.api.dto.AuthResponseDto;
 import org.decepticons.linkshortener.api.dto.RegistrationRequestDto;

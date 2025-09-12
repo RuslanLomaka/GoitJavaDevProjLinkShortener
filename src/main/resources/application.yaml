@@ -7,6 +7,15 @@
 # Env vars are read from .env (spring-dotenv) or the OS.
 # ====================================================
 
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui
+    display-request-duration: true
+    operations-sorter: method
+
 spring:
   profiles:
     default: dev   # default profile if none specified

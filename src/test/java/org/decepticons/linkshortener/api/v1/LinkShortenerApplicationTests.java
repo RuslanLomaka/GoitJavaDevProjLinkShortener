@@ -1,5 +1,6 @@
 package org.decepticons.linkshortener.api.v1;
 
+import org.decepticons.linkshortener.api.controller.HealthController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -26,6 +27,6 @@ class LinkShortenerApplicationTests {
     @Test
     void healthControllerIsLoaded() {
         assertThat(context.getBean(
-                org.decepticons.linkshortener.api.v1.controller.HealthController.class)).isNotNull();
+                HealthController.class)).isNotNull();
     }
 }

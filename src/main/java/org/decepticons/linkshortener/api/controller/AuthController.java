@@ -1,4 +1,4 @@
-package org.decepticons.linkshortener.api.security.controller;
+package org.decepticons.linkshortener.api.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST controller for user authentication.
- * Provides endpoints for registration, login, and token refresh.
+ * Provides endpoints for user registration, login, and token refresh.
  */
 @Tag(name = "Authentication", description = "User authentication and management")
 @RestController

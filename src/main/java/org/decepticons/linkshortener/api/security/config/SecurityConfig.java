@@ -50,14 +50,22 @@ public class SecurityConfig {
     http
         .csrf(AbstractHttpConfigurer::disable)
         .authorizeHttpRequests(authorize -> authorize
-            .requestMatchers("/auth/register",
+            .requestMatchers(
+
+                //API endpoints
+                "/auth/register",
                 "/auth/login",
                 "/auth/refresh",
-                "/api/v1/health",
+
+                //Documentation endpoints
+                "/health",
+                "/api/links/**",
+                "/h2-console/**",
+                "/swagger-ui.html",
                 "/swagger-ui/**",
-                "/v3/api-docs/**",
-              "/h2-console/**",
-                "/api/links/**")        // ADD: allow H2 console)
+                "/v3/api-docs",
+                "/v3/api-docs/**"
+                )
             .permitAll()
             .requestMatchers(
                 HttpMethod.GET,

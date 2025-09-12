@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -20,8 +20,8 @@ class HealthControllerTest {
     @Autowired
     private MockMvc mvc;
 
-    @MockBean private JwtAuthenticationFilter jwtAuthenticationFilter;
-    @MockBean private JwtTokenUtil jwtTokenUtil;
+    @MockitoBean private JwtAuthenticationFilter jwtAuthenticationFilter;
+    @MockitoBean private JwtTokenUtil jwtTokenUtil;
 
     @Test
     void health_returnsUp() throws Exception {

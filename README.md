@@ -80,7 +80,7 @@ When you run the app locally, these endpoints are available out-of-the-box:
 
 | Feature            | URL                                           | Description                     | Notes |
 |--------------------|-----------------------------------------------|---------------------------------|-------|
-| Health check       | [http://localhost:8080/api/v1/health](http://localhost:8080/api/v1/health) | Simple liveness endpoint.       | Returns `200 OK` when the app is up. |
+| Health check       | [http://localhost:8080/health](http://localhost:8080/api/v1/health) | Simple liveness endpoint.       | Returns `200 OK` when the app is up. |
 | Swagger UI         | [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html) | Interactive API docs & try-it-out. | No auth required. |
 | OpenAPI JSON       | [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs) | Raw OpenAPI spec (JSON).        | Useful for codegen/tools. |
 | OpenAPI YAML       | [http://localhost:8080/v3/api-docs.yaml](http://localhost:8080/v3/api-docs.yaml) | Raw OpenAPI spec (YAML).        | Some tools prefer YAML. |
@@ -113,7 +113,7 @@ The application provides a health check endpoint to verify that the service is r
 
 ## Endpoint
 ```
-GET http://localhost:8080/api/v1/health
+GET http://localhost:8080/health
 ```
 
 ## Example Response

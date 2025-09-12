@@ -69,6 +69,18 @@ dependencies {
     testImplementation "org.springframework.security:spring-security-test"
     testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
+    testImplementation("org.mockito:mockito-core:5.19.0")
 }
 
-test { useJUnitPlatform() }
+test {
+    useJUnitPlatform()
+
+    doFirst {
+        def mockitoCoreJar = configurations.testRuntimeClasspath.find {
+            it.name.startsWith("mockito-core-") && it.name.endsWith(".jar")
+        }
+        if (mockitoCoreJar) {
+            jvmArgs "-javaagent:${mockitoCoreJar.absolutePath}"
+        }
+    }
+}

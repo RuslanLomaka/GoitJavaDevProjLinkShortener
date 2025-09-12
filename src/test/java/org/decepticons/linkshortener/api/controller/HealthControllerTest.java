@@ -24,7 +24,7 @@ class HealthControllerTest {
 
     @Test
     void health_returnsUp() throws Exception {
-        mvc.perform(get("/api/v1/health"))
+        mvc.perform(get("/health"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json"))
                 .andExpect(jsonPath("$.status").value("UP"));

@@ -10,11 +10,9 @@ import org.decepticons.linkshortener.api.exception.NoSuchUserFoundInTheSystemExc
 import org.decepticons.linkshortener.api.exception.ShortLinkIsOutOfDateException;
 import org.decepticons.linkshortener.api.model.LinkStatus;
 import org.decepticons.linkshortener.api.model.User;
-import org.decepticons.linkshortener.api.repository.LinkRepository;
 import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.decepticons.linkshortener.api.service.CacheInspectionService;
 import org.decepticons.linkshortener.api.service.LinkService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -35,11 +33,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/links")
 public class LinkController {
   private final LinkService linkService;
-  private final LinkRepository linkRepository;
+
   private final UserRepository userRepository;
 
-  @Autowired
-  private CacheInspectionService cacheInspectionService;
+  private final CacheInspectionService cacheInspectionService;
 
   /**
    * Constructs a new {@link LinkController} with the given dependencies.
@@ -48,11 +45,11 @@ public class LinkController {
    * @param userRepository the repository for accessing {@link User} entities
    */
   public LinkController(LinkService linkService,
-                        LinkRepository linkRepository,
-                        UserRepository userRepository) {
+                        UserRepository userRepository,
+                        CacheInspectionService cacheInspectionService) {
     this.linkService = linkService;
-    this.linkRepository = linkRepository;
     this.userRepository = userRepository;
+    this.cacheInspectionService = cacheInspectionService;
   }
 
   /**
@@ -88,17 +85,23 @@ public class LinkController {
   @GetMapping("/{code}")
   public void redirect(@PathVariable String code, HttpServletResponse response) throws IOException {
 
-    LinkResponseDto link = linkService.accessLink(code);
 
-    if (link.status().equalsIgnoreCase(LinkStatus.INACTIVE.name())) {
+    LinkResponseDto linkByCode = linkService.getLinkByCode(code);
+
+    if (linkService.validateLink(linkByCode)) {
+      linkService.incrementClicks(linkByCode);
+    } else {
+      if (linkByCode.status().equalsIgnoreCase(LinkStatus.ACTIVE.name())) {
+        linkService.deactivateLink(linkByCode);
+      }
       throw new ShortLinkIsOutOfDateException(
           "Short link is out of date: " + code,
           code,
-          link.expiresAt()
+          linkByCode.expiresAt()
       );
     }
 
-    response.sendRedirect(link.originalUrl());
+    response.sendRedirect(linkByCode.originalUrl());
   }
 
   /**
@@ -148,11 +151,12 @@ public class LinkController {
    *
    * @param id the unique identifier of the link to delete
    * @return a {@link ResponseEntity} with HTTP status 204 (No Content)
-   *     if the deletion was successful.
+   *         if the deletion was successful.
    */
   @DeleteMapping("/delete/{id}")
   public ResponseEntity<Void> deleteLink(@PathVariable UUID id) {
     linkService.deleteLink(id);
     return ResponseEntity.noContent().build();
   }
+
 }

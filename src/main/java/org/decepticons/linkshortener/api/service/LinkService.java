@@ -13,6 +13,7 @@ import org.decepticons.linkshortener.api.model.LinkStatus;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.repository.LinkRepository;
 import org.decepticons.linkshortener.api.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -34,8 +35,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class LinkService {
 
+  @Value("${link.expiration-days}")
+  private long linkExpirationDays;
+
   private final LinkRepository linkRepository;
   private final UserRepository userRepository;
+  private final CacheEvictService cacheEvictService;
   private final Random random = new Random();
 
 
@@ -45,11 +50,13 @@ public class LinkService {
    * @param linkRepository repository used to persist and load {@link Link} entities
    */
 
-  public LinkService(LinkRepository linkRepository, UserRepository userRepository) {
+  public LinkService(LinkRepository linkRepository,
+                     UserRepository userRepository,
+                     CacheEvictService cacheEvictService) {
     this.linkRepository = linkRepository;
     this.userRepository = userRepository;
+    this.cacheEvictService = cacheEvictService;
   }
-
 
 
   /**
@@ -66,7 +73,7 @@ public class LinkService {
     link.setOwner(owner);
 
     link.setCode(generateRandomCode());
-    link.setExpiresAt(Instant.now().plus(2, ChronoUnit.DAYS));
+    link.setExpiresAt(Instant.now().plus(linkExpirationDays, ChronoUnit.DAYS));
     link.setStatus(LinkStatus.ACTIVE);
 
     linkRepository.save(link);
@@ -85,7 +92,7 @@ public class LinkService {
    */
   @Transactional
   @CachePut(value = "shortLinksCache", key = "#link.code")
-  public void incrementClicks(LinkResponseDto link) {
+  public LinkResponseDto incrementClicks(LinkResponseDto link) {
     Link linkByCode = linkRepository.findByCode(link.code())
         .orElseThrow(() -> new NoSuchShortLinkFoundInTheSystemException(
             "No such short link found in the system: " + link.code(),
@@ -93,6 +100,8 @@ public class LinkService {
         ));
     linkByCode.incrementClicks();
     linkRepository.save(linkByCode);
+
+    return mapToResponse(linkByCode);
   }
 
 
@@ -115,7 +124,6 @@ public class LinkService {
         link.getOwner().getId()
     );
   }
-
 
 
   /**
@@ -143,45 +151,45 @@ public class LinkService {
   public LinkResponseDto getLinkByCode(String code) {
     Link link = linkRepository.findByCode(code)
         .orElseThrow(() -> new NoSuchShortLinkFoundInTheSystemException(
-        "No such short link found in the system: " + code,
-        code
-    ));
+            "No such short link found in the system: " + code,
+            code
+        ));
 
     return mapToResponse(link);
 
   }
+
 
   /**
-   * Accesses a link by its code, increments click count if active, and updates status if expired.
+   * Deactivates a link by setting its status to INACTIVE.
    *
-   * @param code the short code of the link to access
-   * @return a {@link LinkResponseDto} representing the accessed link
-   * @throws NoSuchShortLinkFoundInTheSystemException if no link with the given code exists
+   * @param link the link to deactivate
+   * @return the updated {@link LinkResponseDto} with status set to INACTIVE
    */
-  @Transactional
-  @CachePut(value = "shortLinksCache", key = "#code")
-  public LinkResponseDto accessLink(String code) {
-
-    Link link = linkRepository.findByCode(code)
+  @CachePut(value = "shortLinksCache", key = "#link.code")
+  public LinkResponseDto deactivateLink(LinkResponseDto link) {
+    Link linkByCode = linkRepository.findByCode(link.code())
         .orElseThrow(() -> new NoSuchShortLinkFoundInTheSystemException(
-            "No such short link found in the system: " + code, code));
-
-
-    boolean active = link.getStatus() == LinkStatus.ACTIVE
-        && (link.getExpiresAt() == null || link.getExpiresAt().isAfter(Instant.now()));
-
-    if (!active) {
-      link.setStatus(LinkStatus.INACTIVE);
-      linkRepository.save(link);
-    } else {
-
-      link.incrementClicks();
-      linkRepository.save(link);
-    }
-
-
-    return mapToResponse(link);
+            "No such short link found in the system: " + link.code(),
+            link.code()
+        ));
+    linkByCode.setStatus(LinkStatus.INACTIVE);
+    linkRepository.save(linkByCode);
+    return mapToResponse(linkByCode);
   }
+
+
+  /**
+   * Validates if a link is active and not expired.
+   *
+   * @param link the link to validate
+   * @return {@code true} if the link is active and not expired; {@code false} otherwise
+   */
+  public boolean validateLink(LinkResponseDto link) {
+    return link.status().equalsIgnoreCase(LinkStatus.ACTIVE.toString())
+        && (link.expiresAt() == null || link.expiresAt().isAfter(Instant.now()));
+  }
+
 
   /**
    * Retrieves all links of the currently authenticated user with pagination.
@@ -216,12 +224,15 @@ public class LinkService {
    *
    * @param linkId the unique identifier of the link to delete
    */
+  @Transactional
   public void deleteLink(UUID linkId) {
-    UUID userId = getCurrentUserId();
-    linkRepository.findById(linkId)
-        .filter(link -> link.getOwner().getId().equals(userId))
-        .ifPresent(linkRepository::delete);
+    Link link = linkRepository.findById(linkId)
+        .orElseThrow(() -> new NoSuchShortLinkFoundInTheSystemException(
+            "No such short link found in the system", linkId.toString()
+        ));
 
+    linkRepository.delete(link);
+    cacheEvictService.evictLink(link.getCode());
   }
 
   /**

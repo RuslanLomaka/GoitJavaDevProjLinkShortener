@@ -7,6 +7,8 @@
 # Env vars are read from .env (spring-dotenv) or the OS.
 # ====================================================
 
+link:
+  expiration-days: ${LINK_EXPIRATION_DAYS:7}
 
 springdoc:
   api-docs:

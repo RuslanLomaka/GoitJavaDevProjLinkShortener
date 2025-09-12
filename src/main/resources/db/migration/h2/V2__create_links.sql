@@ -1,3 +1,4 @@
+-- Links table (H2)
 create table if not exists links (
                                      id uuid primary key,
                                      code varchar(12) not null,

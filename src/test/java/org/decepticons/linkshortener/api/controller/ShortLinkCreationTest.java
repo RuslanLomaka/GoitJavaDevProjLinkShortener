@@ -1,7 +1,6 @@
-package org.decepticons.linkshortener.api.v1;
+package org.decepticons.linkshortener.api.controller;
 
 
-import org.decepticons.linkshortener.api.controller.LinkController;
 import org.decepticons.linkshortener.api.dto.LinkResponseDto;
 import org.decepticons.linkshortener.api.dto.UrlRequestDto;
 import org.decepticons.linkshortener.api.model.User;
@@ -25,7 +24,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 
 @ExtendWith(MockitoExtension.class)

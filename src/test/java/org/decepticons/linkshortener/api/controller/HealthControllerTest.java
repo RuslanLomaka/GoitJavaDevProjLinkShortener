@@ -1,6 +1,5 @@
-package org.decepticons.linkshortener.api.v1;
+package org.decepticons.linkshortener.api.controller;
 
-import org.decepticons.linkshortener.api.controller.HealthController;
 import org.decepticons.linkshortener.api.security.jwt.JwtAuthenticationFilter;
 import org.decepticons.linkshortener.api.security.jwt.JwtTokenUtil;
 import org.junit.jupiter.api.Test;

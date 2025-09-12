@@ -226,6 +226,7 @@ public class LinkService {
    */
   @Transactional
   public void deleteLink(UUID linkId) {
+    getCurrentUserId();
     Link link = linkRepository.findById(linkId)
         .orElseThrow(() -> new NoSuchShortLinkFoundInTheSystemException(
             "No such short link found in the system", linkId.toString()

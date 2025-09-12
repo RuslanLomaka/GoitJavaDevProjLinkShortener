@@ -1,1 +1,16 @@
-rootProject.name = 'linkShortener'
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    // Prefer the repositories declared in build.gradle, but also define a fallback here
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+    repositories {
+        mavenCentral()
+    }
+}
+
+rootProject.name = "linkShortener"

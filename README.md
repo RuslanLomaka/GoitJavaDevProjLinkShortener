@@ -135,8 +135,50 @@ GET http://localhost:8080/api/v1/health
 - Documented for project setup validation, not for production monitoring.
 
 
+------------------------------------------------------------------------
 
+## 🚀 Running with PostgreSQL (prod profile)
+### 1. Install PostgreSQL
+- On Windows: [Download installer](https://www.postgresql.org/download/windows/).
+- During install, you will set a password for the **postgres superuser** — this is for *you only*, do not put it in the project.
+### 2. Create database & app user
+After install, open **SQL Shell (psql)** or **pgAdmin** and run these statements **once**:
+```sql
+-- Create the project database
+CREATE DATABASE link_shortener;
+-- Create a dedicated user for the app (replace 'url_pass' with your own password)
+CREATE USER url_user WITH PASSWORD 'url_pass';
+-- Give that user full access to the database
+GRANT ALL PRIVILEGES ON DATABASE link_shortener TO url_user;
+-- Make url_user the owner (optional but clean)
+ALTER DATABASE link_shortener OWNER TO url_user;
+```
+### 👉 Important:
+`url_pass` here is the password you will put into `.env` (not the superuser password).
+Every developer can choose their own `url_pass` locally.
+The app will never use the postgres superuser account.
+### 3. Configure .env
+Add these variables to your local .env file (they are already used by application.yml):
+```DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=url_shortener
+   DB_USERNAME=url_user
+   DB_PASSWORD=url_pass
+   DB_DRIVER_PROD=org.postgresql.Driver
+   HIBERNATE_DIALECT_PROD=org.hibernate.dialect.PostgreSQLDialect
+```
+### 4. How it works
+When you start with the prod profile, the app will connect using the values above.
+Flyway will automatically run all scripts from src/main/resources/db/migration/postgresql
+→ tables are created on first run, no manual CREATE TABLE needed.
+### 5. Run the app
 
+ Run with the prod profile
+```cmd
+./gradlew bootRun --args='--spring.profiles.active=prod'
+```
+
+ Connect to DB with psql -U url_user -d url_shortener -h localhost and run \dt to see created tables.
 
 ------------------------------------------------------------------------
 

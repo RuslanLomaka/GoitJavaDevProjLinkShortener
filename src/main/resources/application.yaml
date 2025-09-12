@@ -1,36 +1,10 @@
 # ====================================================
 # SPRING BOOT CONFIGURATION
-# This file defines application settings for different profiles:
+# Profiles:
 #   - dev  = local development (H2 in-memory DB)
-#   - prod = production (PostgreSQL via Docker or real DB)
+#   - prod = PostgreSQL (local/native or Docker)
 #
-# Values like ${DB_URL} are read from your .env file (thanks to spring-dotenv)
-# or from environment variables (e.g. Docker Compose).
-#
-# Example .env values (put these in your .env file, not here!):
-# ------------------------------------------------------------
-# DB_URL=jdbc:h2:mem:shortenerdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-# DB_DRIVER=org.h2.Driver
-# DB_USERNAME=sa
-# DB_PASSWORD=
-# JPA_DDL_AUTO=validate
-# HIBERNATE_DIALECT=org.hibernate.dialect.H2Dialect
-# FLYWAY_ENABLED=true
-# FLYWAY_LOCATIONS=classpath:db/migration/h2
-#
-# # For Postgres (prod)
-# DB_HOST=localhost
-# DB_PORT=5432
-# DB_NAME=url_shortener
-# DB_USERNAME=postgres
-# DB_PASSWORD=postgres
-# DB_DRIVER_PROD=org.postgresql.Driver
-# HIBERNATE_DIALECT_PROD=org.hibernate.dialect.PostgreSQLDialect
-#
-# # App-specific
-# JWT_SECRET=change-me
-# JWT_TTL_SECONDS=3600
-# APP_BASE_URL=http://localhost:8080
+# Env vars are read from .env (spring-dotenv) or the OS.
 # ====================================================
 
 spring:
@@ -38,14 +12,14 @@ spring:
     default: dev   # default profile if none specified
 
 server:
-  port: ${SERVER_PORT:8080}   # default port is 8080
+  port: ${SERVER_PORT:8080}
 
 app:
-  base-url: ${APP_BASE_URL:http://localhost:8080}   # base URL used in responses, can be overridden
+  base-url: ${APP_BASE_URL:http://localhost:8080}
 
 jwt:
-  secret: ${JWT_SECRET:dev-secret-change-me}        # JWT signing secret (set in .env or compose)
-  ttl-seconds: ${JWT_TTL_SECONDS:3600}              # JWT token lifetime in seconds
+  secret: ${JWT_SECRET:dev-secret-change-me}
+  ttl-seconds: ${JWT_TTL_SECONDS:3600}
 
 ---
 # ===================== DEV (H2 in-memory DB) =====================
@@ -60,17 +34,17 @@ spring:
       path: /h2-console
 
   datasource:
-    url: ${DB_URL}                     # e.g. jdbc:h2:mem:shortenerdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: ${DB_DRIVER}    # e.g. org.h2.Driver
-    username: ${DB_USERNAME}           # e.g. sa
-    password: ${DB_PASSWORD}           # usually empty for H2
+    url: ${DB_URL}
+    driver-class-name: ${DB_DRIVER}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
   jpa:
     hibernate:
       ddl-auto: ${JPA_DDL_AUTO:validate}
     properties:
       hibernate:
-        dialect: ${HIBERNATE_DIALECT}  # e.g. org.hibernate.dialect.H2Dialect
+        dialect: ${HIBERNATE_DIALECT}
 
   flyway:
     enabled: ${FLYWAY_ENABLED:true}
@@ -84,12 +58,12 @@ spring:
       on-profile: prod
 
   datasource:
-    # Docker Compose sets SPRING_DATASOURCE_URL directly → this will take precedence.
-    # Otherwise, we construct it from DB_HOST, DB_PORT, DB_NAME.
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:db}:${DB_PORT:5432}/${DB_NAME:url_shortener}}
-    driver-class-name: ${DB_DRIVER_PROD:org.postgresql.Driver}
-    username: ${SPRING_DATASOURCE_USERNAME:${DB_USERNAME:postgres}}
-    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:postgres}}
+    # If SPRING_DATASOURCE_URL is set (e.g., by Docker Compose), it wins.
+    # Otherwise, it's built from DB_HOST/DB_PORT/DB_NAME.
+   url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:db}:${DB_PORT:5432}/${DB_NAME:link_shortener}}
+   driver-class-name: ${DB_DRIVER_PROD:org.postgresql.Driver}
+   username: ${SPRING_DATASOURCE_USERNAME:${DB_USERNAME_PROD:postgres}}
+   password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD_PROD:postgres}}
 
   jpa:
     hibernate:

@@ -8,6 +8,7 @@ import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.decepticons.linkshortener.api.service.LinkService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Short Link Creation Tests")
 class ShortLinkCreationTest {
 
   @Mock
@@ -50,6 +52,7 @@ class ShortLinkCreationTest {
   }
 
   @Test
+  @DisplayName("Create Short Link - Success")
   void testCreateShortLink_Success() {
     UrlRequestDto urlRequestDto = new UrlRequestDto();
     urlRequestDto.setUrl("https://example.com/some/long/url");
@@ -88,6 +91,7 @@ class ShortLinkCreationTest {
 
 
   @Test
+  @DisplayName("Create Short Link - User Not Found")
   void testCreateShortLink_UserNotFound() {
     UrlRequestDto urlRequestDto = new UrlRequestDto();
     urlRequestDto.setUrl("https://example.com/some/long/url");

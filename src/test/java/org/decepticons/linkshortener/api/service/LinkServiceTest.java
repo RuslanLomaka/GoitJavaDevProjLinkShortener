@@ -6,16 +6,21 @@ import org.decepticons.linkshortener.api.model.Link;
 import org.decepticons.linkshortener.api.model.LinkStatus;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.repository.LinkRepository;
+import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,12 +30,18 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class LinkServiceTest {
+@ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
+class LinkServiceTest {
 
   @Mock
   private LinkRepository linkRepository;
   @InjectMocks
   private LinkService linkService;
+  @Mock
+  private UserRepository userRepository;
+
+
+
 
 
   @BeforeEach
@@ -38,7 +49,6 @@ public class LinkServiceTest {
     linkRepository = mock(LinkRepository.class);
     linkService = new LinkService(linkRepository, null, null);
   }
-
 
   @Test
   @DisplayName("Link Creation - Success")
@@ -176,6 +186,7 @@ public class LinkServiceTest {
 
 
   @Test
+  @DisplayName("Validate Link - Success")
   void validateLink_Success() {
     LinkResponseDto linkResponseDto = new LinkResponseDto(
         UUID.randomUUID(),

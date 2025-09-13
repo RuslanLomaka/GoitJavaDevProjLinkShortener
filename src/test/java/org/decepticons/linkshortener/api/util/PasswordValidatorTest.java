@@ -84,4 +84,5 @@ class PasswordValidatorTest {
     assertFalse(PasswordValidator.isValid(""));
     assertFalse(PasswordValidator.isValid("    "));
   }
+
 }

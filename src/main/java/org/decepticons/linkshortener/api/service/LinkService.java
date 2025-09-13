@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
 import java.util.UUID;
+
 import org.decepticons.linkshortener.api.dto.LinkResponseDto;
 import org.decepticons.linkshortener.api.dto.UrlRequestDto;
 import org.decepticons.linkshortener.api.exception.NoSuchShortLinkFoundInTheSystemException;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -226,11 +228,18 @@ public class LinkService {
    */
   @Transactional
   public void deleteLink(UUID linkId) {
+    UUID currentUserId = getCurrentUserId();
+
     getCurrentUserId();
     Link link = linkRepository.findById(linkId)
         .orElseThrow(() -> new NoSuchShortLinkFoundInTheSystemException(
             "No such short link found in the system", linkId.toString()
         ));
+
+
+    if (!link.getOwner().getId().equals(currentUserId)) {
+      throw new AccessDeniedException("You are not allowed to delete this link");
+    }
 
     linkRepository.delete(link);
     cacheEvictService.evictLink(link.getCode());
@@ -249,6 +258,15 @@ public class LinkService {
             username
         ));
     return user.getId();
+  }
+
+  public User getCurrentUser() {
+    String username = SecurityContextHolder.getContext().getAuthentication().getName();
+    return userRepository.findByUsername(username)
+        .orElseThrow(() -> new NoSuchUserFoundInTheSystemException(
+            "No such user found in the system: " + username,
+            username
+        ));
   }
 }
 

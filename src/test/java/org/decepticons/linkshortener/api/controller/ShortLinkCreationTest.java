@@ -37,7 +37,7 @@ class ShortLinkCreationTest {
   private UserRepository userRepository;
 
   @InjectMocks
-  private LinkController linkController;
+  private LinkCrudController linkController;
 
 
   @BeforeEach

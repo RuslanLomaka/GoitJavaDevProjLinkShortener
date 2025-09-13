@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST controller for health check endpoint.
- * <p>
+
  * Provides a simple `/health` endpoint to check if the service is running.
- * </p>
+
  */
 @RestController
 public class HealthController {

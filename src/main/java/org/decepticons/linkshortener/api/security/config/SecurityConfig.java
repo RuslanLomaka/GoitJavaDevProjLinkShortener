@@ -52,12 +52,12 @@ public class SecurityConfig {
         .authorizeHttpRequests(authorize -> authorize
             .requestMatchers(
 
-                //API endpoints
+                // API endpoints
                 "/auth/register",
                 "/auth/login",
                 "/auth/refresh",
 
-                //Documentation endpoints
+                // Documentation endpoints
                 "/health",
                 "/api/links/**",
                 "/h2-console/**",

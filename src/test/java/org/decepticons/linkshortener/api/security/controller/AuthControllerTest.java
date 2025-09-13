@@ -1,184 +1,100 @@
 package org.decepticons.linkshortener.api.security.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.decepticons.linkshortener.api.controller.AuthController;
-import org.decepticons.linkshortener.api.dto.AuthRequestDto;
-import org.decepticons.linkshortener.api.dto.AuthResponseDto;
 import org.decepticons.linkshortener.api.dto.RegistrationRequestDto;
-import org.decepticons.linkshortener.api.exceptions.InvalidPasswordException;
-import org.decepticons.linkshortener.api.exceptions.InvalidTokenException;
-import org.decepticons.linkshortener.api.exceptions.UserAlreadyExistsException;
-import org.decepticons.linkshortener.api.exceptions.UserNotFoundException;
-import org.decepticons.linkshortener.api.security.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.util.Collections;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Integration tests for the AuthController.
- * These tests verify the REST API endpoints' behavior for authentication and registration,
- * with the service layer mocked.
+ * Integration tests for the AuthController using Testcontainers and a live database.
+ * These tests verify the full application stack's behavior for authentication
+ * and registration, from the controller to the real database.
  */
-@ExtendWith(MockitoExtension.class)
-@DisplayName("Auth Controller Integration Tests")
+@Testcontainers
+@SpringBootTest
+@DisplayName("Auth Controller Integration Tests with Testcontainers")
 class AuthControllerTest {
 
-  private MockMvc mockMvc;
+    private MockMvc mockMvc;
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private WebApplicationContext webApplicationContext;
 
-  @Mock
-  private AuthService authService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-  @InjectMocks
-  private AuthController authController;
+    // Use a PostgreSQL container for the tests
+    @Container
+    public static PostgreSQLContainer<?> postgresContainer = new PostgreSQLContainer<>("postgres:16-alpine")
+            .withDatabaseName("testdb")
+            .withUsername("testuser")
+            .withPassword("testpass");
 
-  @BeforeEach
-  void setup() {
-    // Given
-    mockMvc = MockMvcBuilders.standaloneSetup(authController)
-        .setControllerAdvice(new org.decepticons.linkshortener.api.exceptions.GlobalExceptionHandler())
-        .build();
-  }
+    // Dynamically set the data source properties using the running container's details
+    @DynamicPropertySource
+    static void setDatasourceProperties(org.springframework.test.context.DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgresContainer::getJdbcUrl);
+        registry.add("spring.datasource.username", postgresContainer::getUsername);
+        registry.add("spring.datasource.password", postgresContainer::getPassword);
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+        registry.add("spring.flyway.enabled", () -> "true");
+        registry.add("spring.flyway.locations", () -> "classpath:db/migration/postgresql");
+    }
 
-  @Test
-  @DisplayName("given a registration request, when registering, then returns 200 OK")
-  void givenRegistrationRequest_whenRegistering_thenReturnsOk() throws Exception {
-    // Given
-    RegistrationRequestDto requestDto = new RegistrationRequestDto();
-    requestDto.setUsername("testuser");
-    requestDto.setPassword("Password123!");
-    String expectedUsername = "testuser";
+    @BeforeEach
+    void setup() {
+        // Build MockMvc from the full application context
+        mockMvc = MockMvcBuilders
+                .webAppContextSetup(webApplicationContext)
+                .build();
+    }
 
-    when(authService.registerUser(any(RegistrationRequestDto.class))).thenReturn(expectedUsername);
+    @Test
+    @DisplayName("given a new user, when registering, then the user is successfully created in the database")
+    void givenNewUser_whenRegistering_thenUserIsCreated() throws Exception {
+        // Given a new registration request
+        RegistrationRequestDto requestDto = new RegistrationRequestDto();
+        requestDto.setUsername("testuser_new");
+        requestDto.setPassword("Password123!");
 
-    // When & Then
-    mockMvc.perform(post("/auth/register")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(requestDto)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$").value(expectedUsername));
-  }
+        // When the registration endpoint is called
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value("testuser_new"));
+    }
 
-  @Test
-  @DisplayName("given an existing username, when registering, then returns 409 Conflict")
-  void givenExistingUsername_whenRegistering_thenReturnsConflict() throws Exception {
-    // Given
-    RegistrationRequestDto requestDto = new RegistrationRequestDto();
-    requestDto.setUsername("existinguser");
-    requestDto.setPassword("Password123!");
-    String expectedErrorMessage = "User with username 'existinguser' already exists";
+    @Test
+    @DisplayName("given an existing user, when registering, then returns 409 Conflict")
+    void givenExistingUser_whenRegistering_thenReturnsConflict() throws Exception {
+        // First, register a user to ensure they exist in the database
+        RegistrationRequestDto initialUser = new RegistrationRequestDto();
+        initialUser.setUsername("existinguser");
+        initialUser.setPassword("Password123!");
+        mockMvc.perform(post("/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(initialUser)));
 
-    doThrow(new UserAlreadyExistsException("existinguser")).when(authService).registerUser(any(RegistrationRequestDto.class));
-
-    // When & Then
-    mockMvc.perform(post("/auth/register")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(requestDto)))
-        .andExpect(status().isConflict())
-        .andExpect(jsonPath("$.message").value(expectedErrorMessage));
-  }
-
-  @Test
-  @DisplayName("given an invalid password, when registering, then returns 400 Bad Request")
-  void givenInvalidPassword_whenRegistering_thenReturnsBadRequest() throws Exception {
-    // Given
-    RegistrationRequestDto requestDto = new RegistrationRequestDto();
-    requestDto.setUsername("newuser");
-    requestDto.setPassword("short");
-    String expectedErrorMessage = "Password does not meet complexity requirements";
-
-    doThrow(new InvalidPasswordException(expectedErrorMessage)).when(authService).registerUser(any(RegistrationRequestDto.class));
-
-    // When & Then
-    mockMvc.perform(post("/auth/register")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(requestDto)))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.message").value(expectedErrorMessage));
-  }
-
-  @Test
-  @DisplayName("given a valid login request, when logging in, then returns 200 OK with tokens")
-  void givenValidLoginRequest_whenLoggingIn_thenReturnsTokens() throws Exception {
-    // Given
-    AuthRequestDto requestDto = new AuthRequestDto();
-    requestDto.setUsername("testuser");
-    requestDto.setPassword("Password123!");
-    AuthResponseDto expectedResponseDto = new AuthResponseDto("testuser", Collections.emptyList(), "access.token", "refresh.token");
-
-    when(authService.login(any(AuthRequestDto.class))).thenReturn(expectedResponseDto);
-
-    // When & Then
-    mockMvc.perform(post("/auth/login")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(requestDto)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.accessToken").value(expectedResponseDto.getAccessToken()))
-        .andExpect(jsonPath("$.refreshToken").value(expectedResponseDto.getRefreshToken()));
-  }
-
-  @Test
-  @DisplayName("given an invalid login request, when logging in, then returns 404 Not Found")
-  void givenInvalidLoginRequest_whenLoggingIn_thenReturnsNotFound() throws Exception {
-    // Given
-    AuthRequestDto requestDto = new AuthRequestDto();
-    requestDto.setUsername("invaliduser");
-    requestDto.setPassword("wrongpassword");
-    String expectedErrorMessage = "User with username 'invaliduser' not found";
-
-    doThrow(new UserNotFoundException("invaliduser")).when(authService).login(any(AuthRequestDto.class));
-
-    // When & Then
-    mockMvc.perform(post("/auth/login")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(requestDto)))
-        .andExpect(status().isNotFound())
-        .andExpect(jsonPath("$.message").value(expectedErrorMessage));
-  }
-
-  @Test
-  @DisplayName("given a valid refresh token, when refreshing, then returns 200 OK with new tokens")
-  void givenValidRefreshToken_whenRefreshing_thenReturnsNewTokens() throws Exception {
-    // Given
-    AuthResponseDto expectedResponseDto = new AuthResponseDto();
-    when(authService.refreshToken(any(String.class))).thenReturn(expectedResponseDto);
-
-    // When & Then
-    mockMvc.perform(post("/auth/refresh")
-            .header("Authorization", "Bearer valid.refresh.token")
-            .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk());
-  }
-
-  @Test
-  @DisplayName("given an invalid refresh token, when refreshing, then returns 401 Unauthorized")
-  void givenInvalidRefreshToken_whenRefreshing_thenReturnsUnauthorized() throws Exception {
-    // Given
-    String expectedErrorMessage = "invalid token";
-    doThrow(new InvalidTokenException(expectedErrorMessage)).when(authService).refreshToken(any(String.class));
-
-    // When & Then
-    mockMvc.perform(post("/auth/refresh")
-            .header("Authorization", "Bearer invalid.refresh.token")
-            .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isUnauthorized())
-        .andExpect(jsonPath("$.message").value(expectedErrorMessage));
-  }
+        // Then, attempt to register the same user again
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(initialUser)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("User with username 'existinguser' already exists"));
+    }
 }

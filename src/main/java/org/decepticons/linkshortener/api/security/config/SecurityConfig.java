@@ -58,7 +58,7 @@ public class SecurityConfig {
                 "/api/v1/auth/refresh",
 
 // Redirect endpoint
-                "/links/**",
+                "/api/links/**",
 
 // Documentation & health endpoints
                 "/health",

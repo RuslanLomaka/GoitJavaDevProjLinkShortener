@@ -7,6 +7,10 @@
 # Env vars are read from .env (spring-dotenv) or the OS.
 # ====================================================
 
+logging:
+  level:
+    org.springdoc: DEBUG
+
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -14,17 +18,6 @@ springdoc:
     path: /swagger-ui
     display-request-duration: true
     operations-sorter: method
-  # --- Groups for Swagger dropdown ---
-  group-configs:
-    # Public endpoints (no auth): health + redirect
-    - group: public
-      paths-to-match:
-        - /health
-        - /{code}
-    # Main API (v1)
-    - group: api-v1
-      paths-to-match:
-        - /api/v1/**
 
 spring:
   profiles:

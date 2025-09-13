@@ -53,13 +53,15 @@ public class SecurityConfig {
             .requestMatchers(
 
                 // API endpoints
-                "/auth/register",
-                "/auth/login",
-                "/auth/refresh",
+                "/api/v1/auth/register",
+                "/api/v1/auth/login",
+                "/api/v1/auth/refresh",
 
-                // Documentation endpoints
-                "/health",
+                // Redirect endpoint
                 "/api/links/**",
+
+                // Documentation & health endpoints
+                "/health",
                 "/h2-console/**",
                 "/swagger-ui.html",
                 "/swagger-ui/**",

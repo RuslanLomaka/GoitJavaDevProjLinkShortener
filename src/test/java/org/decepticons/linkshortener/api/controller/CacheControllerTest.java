@@ -1,6 +1,7 @@
 package org.decepticons.linkshortener.api.controller;
 
 import org.decepticons.linkshortener.api.service.CacheInspectionService;
+import org.decepticons.linkshortener.api.v1.controller.CacheController;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,7 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
-public class CacheControllerTest {
+  class CacheControllerTest {
   @Mock
   private CacheInspectionService cacheInspectionService;
 

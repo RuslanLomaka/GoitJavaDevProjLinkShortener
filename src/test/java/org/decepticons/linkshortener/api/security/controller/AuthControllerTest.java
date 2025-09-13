@@ -72,7 +72,7 @@ class AuthControllerTest {
         requestDto.setPassword("Password123!");
 
         // When the registration endpoint is called
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isOk())
@@ -86,12 +86,12 @@ class AuthControllerTest {
         RegistrationRequestDto initialUser = new RegistrationRequestDto();
         initialUser.setUsername("existinguser");
         initialUser.setPassword("Password123!");
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(initialUser)));
 
         // Then, attempt to register the same user again
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(initialUser)))
                 .andExpect(status().isConflict())

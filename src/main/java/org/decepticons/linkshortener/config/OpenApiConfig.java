@@ -12,15 +12,25 @@ import org.springframework.context.annotation.Configuration;
 public class OpenApiConfig {
   /**
    * Defines a GroupedOpenApi bean for version 1 of the API.
-   * Only paths matching "/api/**" will be included in this group.
-   *
-   * @return a configured GroupedOpenApi instance
+   * Includes only versioned paths ("/api/v1/**").
    */
   @Bean
-  public GroupedOpenApi apiGroup() {
+  public GroupedOpenApi apiV1Group() {
     return GroupedOpenApi.builder()
-        .group("api")
-        .pathsToMatch("/api/**", "/auth/**", "/health/**")
+        .group("v1")
+        .pathsToMatch("/api/v1/**")
+        .build();
+  }
+
+  /**
+   * Defines a separate group for public (unversioned) endpoints
+   * like redirect and health.
+   */
+  @Bean
+  public GroupedOpenApi publicGroup() {
+    return GroupedOpenApi.builder()
+        .group("public")
+        .pathsToMatch("/health", "/{code}")
         .build();
   }
 }

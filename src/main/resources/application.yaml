@@ -7,9 +7,6 @@
 # Env vars are read from .env (spring-dotenv) or the OS.
 # ====================================================
 
-link:
-  expiration-days: ${LINK_EXPIRATION_DAYS:7}
-
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -17,19 +14,29 @@ springdoc:
     path: /swagger-ui
     display-request-duration: true
     operations-sorter: method
+  # --- Groups for Swagger dropdown ---
+  group-configs:
+    # Public endpoints (no auth): health + redirect
+    - group: public
+      paths-to-match:
+        - /health
+        - /{code}
+    # Main API (v1)
+    - group: api-v1
+      paths-to-match:
+        - /api/v1/**
 
 spring:
   profiles:
-    default: dev   # default profile if none specified
+    default: dev
 
 server:
   port: ${SERVER_PORT:8080}
 
-app:
-  base-url: ${APP_BASE_URL:http://localhost:8080}
+link:
+  expiration-days: ${LINK_EXPIRATION_DAYS:7}
 
 jwt:
-  secret: ${JWT_SECRET:dev-secret-change-me}
   ttl-seconds: ${JWT_TTL_SECONDS:3600}
 
 ---

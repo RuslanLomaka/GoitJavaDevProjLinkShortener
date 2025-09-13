@@ -1,11 +1,10 @@
-package org.decepticons.linkshortener.api.controller;
+package org.decepticons.linkshortener.api.v1.controller;
 
 import jakarta.validation.Valid;
 import java.util.UUID;
 import org.decepticons.linkshortener.api.dto.LinkResponseDto;
 import org.decepticons.linkshortener.api.dto.UrlRequestDto;
 import org.decepticons.linkshortener.api.model.User;
-import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.decepticons.linkshortener.api.service.LinkService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
  * All operations are performed in the context of the currently authenticated user.
  */
 @RestController
-@RequestMapping("/api/links")
+@RequestMapping("/api/v1/links")
 public class LinkCrudController {
 
   private final LinkService linkService;

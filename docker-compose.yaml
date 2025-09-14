@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    image: linkshortener:latest
+    ports:
+      - "8080:8080"
+    env_file: .env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/url_shortener
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME_PROD:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD_PROD:-postgres}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

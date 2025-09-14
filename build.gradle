@@ -1,22 +1,26 @@
+buildscript {
+    repositories { mavenCentral() }
+    dependencies {
+        classpath "io.spring.gradle:dependency-management-plugin:1.1.6"
+    }
+}
+
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.5'
-    id 'io.spring.dependency-management' version '1.1.6'
     id 'checkstyle'
 }
+
+apply plugin: 'io.spring.dependency-management'
 
 group = 'org.decepticons'
 version = '0.0.1-SNAPSHOT'
 description = 'linkShortener'
 
-java {
-    toolchain { languageVersion = JavaLanguageVersion.of(21) }
-}
-
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
 repositories { mavenCentral() }
 
 ext {
-    // Tool versions
     checkstyleVersion = '11.0.1'
     lombokVersion = '1.18.38'
     springdocVersion = '2.8.12'
@@ -49,7 +53,7 @@ dependencies {
     implementation "org.flywaydb:flyway-core:${flywayVersion}"
     implementation "org.flywaydb:flyway-database-postgresql:${flywayVersion}"
     runtimeOnly "com.h2database:h2"
-    runtimeOnly "org.postgresql:postgresql"
+    runtimeOnly 'org.postgresql:postgresql:42.7.4'
     implementation "me.paulschwarz:spring-dotenv:4.0.0"
 
     // OpenAPI / Swagger UI
@@ -74,7 +78,6 @@ dependencies {
 
 test {
     useJUnitPlatform()
-
     doFirst {
         def mockitoCoreJar = configurations.testRuntimeClasspath.find {
             it.name.startsWith("mockito-core-") && it.name.endsWith(".jar")

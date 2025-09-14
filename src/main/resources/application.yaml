@@ -71,10 +71,10 @@ spring:
   datasource:
     # If SPRING_DATASOURCE_URL is set (e.g., by Docker Compose), it wins.
     # Otherwise, it's built from DB_HOST/DB_PORT/DB_NAME.
-   url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:db}:${DB_PORT:5432}/${DB_NAME:link_shortener}}
-   driver-class-name: ${DB_DRIVER_PROD:org.postgresql.Driver}
-   username: ${SPRING_DATASOURCE_USERNAME:${DB_USERNAME_PROD:postgres}}
-   password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD_PROD:postgres}}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:db}:${DB_PORT:5432}/${DB_NAME:link_shortener}}
+    driver-class-name: ${DB_DRIVER_PROD:org.postgresql.Driver}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USERNAME_PROD:postgres}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD_PROD:postgres}}
 
   jpa:
     hibernate:

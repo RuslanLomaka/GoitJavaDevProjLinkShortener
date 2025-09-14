@@ -1,25 +1,23 @@
-# ===== Build stage =====
-FROM eclipse-temurin:21-jdk AS build
-WORKDIR /app
+# ---------- BUILD STAGE (uses preinstalled Gradle) ----------
+FROM gradle:8.14.3-jdk21 AS build
+WORKDIR /home/gradle/app
 
-# copy wrapper + gradle files first
-COPY gradlew gradlew.bat build.gradle settings.gradle ./
-COPY gradle ./gradle
-RUN chmod +x ./gradlew
+# Build config first (cache)
+COPY --chown=gradle:gradle settings.gradle build.gradle ./
+COPY --chown=gradle:gradle config ./config
 
-# (optional) warm up wrapper
-RUN ./gradlew --no-daemon -v
+# Warm dependencies (skip checkstyle)
+RUN gradle --no-daemon -x checkstyleMain -x checkstyleTest dependencies
 
-# app sources
-COPY src ./src
+# App sources
+COPY --chown=gradle:gradle src ./src
 
-# build the jar (add stacktrace for better logs)
-RUN ./gradlew --no-daemon --stacktrace clean bootJar
+# Build jar (skip checkstyle)
+RUN gradle clean bootJar --no-daemon -x checkstyleMain -x checkstyleTest
 
-# ===== Run stage =====
+# ---------- RUNTIME STAGE ----------
 FROM eclipse-temurin:21-jre
 WORKDIR /app
-COPY --from=build /app/build/libs/*-SNAPSHOT.jar /app/app.jar
+COPY --from=build /home/gradle/app/build/libs/*.jar /app/app.jar
 EXPOSE 8080
-ENV SPRING_PROFILES_ACTIVE=prod
 ENTRYPOINT ["java","-jar","/app/app.jar"]

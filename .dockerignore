@@ -1,8 +1,11 @@
 .git
 .gitignore
+.idea
 .gradle
 build
 out
-**/*.iml
-.gradle/
-.idea/
+*.iml
+*.log
+*.class
+*.DS_Store
+node_modules

@@ -1,9 +1,0 @@
-services:
-  app:
-    image: linkshortener:latest
-    ports:
-      - "8080:8080"
-    env_file: .env
-    # Be explicit: default to dev inside compose even if someone’s .env says otherwise
-    environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}

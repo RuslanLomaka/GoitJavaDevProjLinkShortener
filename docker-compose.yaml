@@ -9,8 +9,31 @@ services:
     env_file: .env
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/url_shortener
-      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME_PROD:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD_PROD:-postgres}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: url_shortener
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME_PROD:-url_user}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD_PROD:-url_pass}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    container_name: linkshortener-db
+    environment:
+      POSTGRES_DB: url_shortener         # must exist to avoid "database 'url_user' does not exist"
+      POSTGRES_USER: ${DB_USERNAME_PROD:-url_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD_PROD:-url_pass}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME_PROD:-url_user} -d url_shortener"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

@@ -1,5 +1,7 @@
 package org.decepticons.linkshortener.api.exceptions;
 
+import org.decepticons.linkshortener.api.controller.GlobalExceptionHandlerController;
+import org.decepticons.linkshortener.api.exception.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,7 +30,7 @@ class GlobalExceptionHandlerTest {
     // Given
     mockMvc = MockMvcBuilders
         .standaloneSetup(new TestController())
-        .setControllerAdvice(new GlobalExceptionHandler())
+        .setControllerAdvice(new GlobalExceptionHandlerController())
         .build();
   }
 

@@ -1,4 +1,6 @@
-package org.decepticons.linkshortener.api.exceptions;
+package org.decepticons.linkshortener.api.exception;
+
+import org.decepticons.linkshortener.api.exception.BaseException;
 
 /**
  * Thrown when a JWT token is expired.

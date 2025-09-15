@@ -1,9 +1,9 @@
 package org.decepticons.linkshortener.api.security.service.impl;
 
 import org.decepticons.linkshortener.api.dto.RegistrationRequestDto;
-import org.decepticons.linkshortener.api.exceptions.InvalidPasswordException;
-import org.decepticons.linkshortener.api.exceptions.UserAlreadyExistsException;
-import org.decepticons.linkshortener.api.exceptions.UserNotFoundException;
+import org.decepticons.linkshortener.api.exception.InvalidPasswordException;
+import org.decepticons.linkshortener.api.exception.UserAlreadyExistsException;
+import org.decepticons.linkshortener.api.exception.UserNotFoundException;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;

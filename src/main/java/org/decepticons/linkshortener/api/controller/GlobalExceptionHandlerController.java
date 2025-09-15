@@ -1,19 +1,32 @@
-package org.decepticons.linkshortener.api.exceptions;
+package org.decepticons.linkshortener.api.controller;
 
 import java.time.Instant;
 import java.util.Map;
+
+import org.decepticons.linkshortener.api.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-/**
- * Centralized exception handler for REST controllers.
- */
 @ControllerAdvice
-public class GlobalExceptionHandler {
+public class GlobalExceptionHandlerController {
 
   private ResponseEntity<Map<String, Object>> buildErrorResponse(
+      final HttpStatus status,
+      final String error,
+      final String message,
+      final Object details) {
+    return ResponseEntity.status(status).body(Map.of(
+        "timestamp", Instant.now().toString(),
+        "status", status.value(),
+        "error", error,
+        "message", message,
+        "details", details
+    ));
+  }
+
+  private ResponseEntity<Map<String, Object>> buildErrorResponseSecurity(
       final HttpStatus status,
       final String error,
       final String message) {
@@ -25,6 +38,7 @@ public class GlobalExceptionHandler {
     ));
   }
 
+
   /**
    * Handles exceptions when a user already exists.
    *
@@ -34,7 +48,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(UserAlreadyExistsException.class)
   public ResponseEntity<Map<String, Object>> handleUserExists(
       final UserAlreadyExistsException ex) {
-    return buildErrorResponse(
+    return buildErrorResponseSecurity(
         HttpStatus.CONFLICT,
         "User Already Exists",
         ex.getMessage());
@@ -49,7 +63,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(UserNotFoundException.class)
   public ResponseEntity<Map<String, Object>> handleUserNotFound(
       final UserNotFoundException ex) {
-    return buildErrorResponse(
+    return buildErrorResponseSecurity(
         HttpStatus.NOT_FOUND,
         "User Not Found",
         ex.getMessage());
@@ -64,7 +78,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(InvalidPasswordException.class)
   public ResponseEntity<Map<String, Object>> handleInvalidPassword(
       final InvalidPasswordException ex) {
-    return buildErrorResponse(
+    return buildErrorResponseSecurity(
         HttpStatus.BAD_REQUEST,
         "Invalid Password",
         ex.getMessage());
@@ -79,7 +93,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(InvalidTokenException.class)
   public ResponseEntity<Map<String, Object>> handleInvalidToken(
       final InvalidTokenException ex) {
-    return buildErrorResponse(
+    return buildErrorResponseSecurity(
         HttpStatus.UNAUTHORIZED,
         "Invalid Token",
         ex.getMessage());
@@ -94,7 +108,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(ExpiredTokenException.class)
   public ResponseEntity<Map<String, Object>> handleExpiredToken(
       final ExpiredTokenException ex) {
-    return buildErrorResponse(HttpStatus.UNAUTHORIZED,
+    return buildErrorResponseSecurity(HttpStatus.UNAUTHORIZED,
         "Expired Token",
         ex.getMessage());
   }
@@ -107,8 +121,44 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(Exception.class)
   public ResponseEntity<Map<String, Object>> handleGeneric(final Exception ex) {
-    return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+    return buildErrorResponseSecurity(HttpStatus.INTERNAL_SERVER_ERROR,
         "Server Error",
         ex.getMessage());
   }
+
+  // === Link Shortener специфичные ошибки ===
+  @ExceptionHandler(NoSuchUserFoundInTheSystemException.class)
+  public ResponseEntity<Map<String, Object>> handleNoSuchUser(NoSuchUserFoundInTheSystemException ex) {
+    return buildErrorResponse(
+        HttpStatus.NOT_FOUND,
+        "User Not Found",
+        "No such user in the system",
+        Map.of("username", ex.getUsername())
+    );
+  }
+
+  @ExceptionHandler(NoSuchShortLinkFoundInTheSystemException.class)
+  public ResponseEntity<Map<String, Object>> handleNoSuchLink(NoSuchShortLinkFoundInTheSystemException ex) {
+    return buildErrorResponse(
+        HttpStatus.NOT_FOUND,
+        "Short Link Not Found",
+        "No such short link in the system",
+        Map.of("shortLink", ex.getShortLink())
+    );
+  }
+
+  @ExceptionHandler(ShortLinkIsOutOfDateException.class)
+  public ResponseEntity<Map<String, Object>> handleShortLinkOutOfDate(ShortLinkIsOutOfDateException ex) {
+    return buildErrorResponse(
+        HttpStatus.GONE,
+        "Short Link Expired",
+        "The short link is out of date",
+        Map.of(
+            "shortLink", ex.getShortLink(),
+            "expiredAt", ex.getExpiredAt()
+        )
+    );
+  }
+
+
 }

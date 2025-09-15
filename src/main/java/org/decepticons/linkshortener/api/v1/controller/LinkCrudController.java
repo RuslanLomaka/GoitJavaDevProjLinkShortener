@@ -27,15 +27,16 @@ import org.springframework.web.bind.annotation.*;
 public class LinkCrudController {
 
   private final LinkService linkService;
-
+  private final UserService userService;
 
   /**
    * Constructs a new {@link LinkCrudController} with the given dependencies.
    *
    * @param linkService the service responsible for link business logic
    */
-  public LinkCrudController(LinkService linkService) {
+  public LinkCrudController(LinkService linkService, UserService userService) {
     this.linkService = linkService;
+    this.userService = userService;
 
   }
 
@@ -48,7 +49,7 @@ public class LinkCrudController {
   @PostMapping
   @Operation(summary = "Create a short URL for the current user")
   public ResponseEntity<LinkResponseDto> createLink(@Valid @RequestBody UrlRequestDto originalUrl) {
-    User user = linkService.getCurrentUser();
+    User user = userService.getCurrentUser();
 
     LinkResponseDto link = linkService.createLink(originalUrl, user);
 

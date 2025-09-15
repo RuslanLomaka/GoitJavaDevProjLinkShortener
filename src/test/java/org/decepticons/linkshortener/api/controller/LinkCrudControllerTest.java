@@ -40,6 +40,9 @@ class LinkCrudControllerTest {
   @Mock
   private LinkService linkService;
 
+  @Mock
+  UserService userService;
+
 
   @InjectMocks
   private LinkCrudController linkController;
@@ -76,7 +79,7 @@ class LinkCrudControllerTest {
         fakeUser.getId()
     );
 
-    when(linkService.getCurrentUser()).thenReturn(fakeUser);
+    when(userService.getCurrentUser()).thenReturn(fakeUser);
 
 
     when(linkService.createLink(urlRequestDto, fakeUser)).thenReturn(fakeResponse);
@@ -90,7 +93,7 @@ class LinkCrudControllerTest {
     assertEquals("https://example.com/some/long/url", response.getBody().originalUrl());
 
 
-    verify(linkService).getCurrentUser();
+    verify(userService).getCurrentUser();
     verify(linkService).createLink(urlRequestDto, fakeUser);
 
   }
@@ -104,7 +107,7 @@ class LinkCrudControllerTest {
     urlRequestDto.setUrl("https://example.com/some/long/url");
 
 
-    when(linkService.getCurrentUser())
+    when(userService.getCurrentUser())
         .thenThrow(new NoSuchUserFoundInTheSystemException("No such user", "someName"));
 
 

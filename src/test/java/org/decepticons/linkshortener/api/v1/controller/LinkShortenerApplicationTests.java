@@ -1,4 +1,4 @@
-package org.decepticons.linkshortener.api.controller;
+package org.decepticons.linkshortener.api.v1.controller;
 
 import org.decepticons.linkshortener.api.v1.controller.unversioned.HealthController;
 import org.junit.jupiter.api.Test;
@@ -7,8 +7,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest

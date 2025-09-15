@@ -1,20 +1,16 @@
-package org.decepticons.linkshortener.api.controller;
+package org.decepticons.linkshortener.api.v1.controller.unversioned;
 
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.decepticons.linkshortener.api.dto.LinkResponseDto;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.service.LinkService;
-import org.decepticons.linkshortener.api.v1.controller.unversioned.RedirectController;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-
-
 import java.io.IOException;
 import java.time.Instant;
-
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.Mockito.*;
 

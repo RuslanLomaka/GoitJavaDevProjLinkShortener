@@ -1,8 +1,7 @@
-package org.decepticons.linkshortener.api.controller;
+package org.decepticons.linkshortener.api.v1.controller.unversioned;
 
 import org.decepticons.linkshortener.api.security.jwt.JwtAuthenticationFilter;
 import org.decepticons.linkshortener.api.security.jwt.JwtTokenUtil;
-import org.decepticons.linkshortener.api.v1.controller.unversioned.HealthController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

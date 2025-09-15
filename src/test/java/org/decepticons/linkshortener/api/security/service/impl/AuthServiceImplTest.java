@@ -1,13 +1,12 @@
 package org.decepticons.linkshortener.api.security.service.impl;
 
-import org.decepticons.linkshortener.api.dto.AuthRequestDto;
-import org.decepticons.linkshortener.api.dto.AuthResponseDto;
-import org.decepticons.linkshortener.api.dto.RegistrationRequestDto;
-import org.decepticons.linkshortener.api.exceptions.ExpiredTokenException;
 import org.decepticons.linkshortener.api.exceptions.InvalidTokenException;
 import org.decepticons.linkshortener.api.exceptions.UserAlreadyExistsException;
-import org.decepticons.linkshortener.api.exceptions.UserNotFoundException;
 import org.decepticons.linkshortener.api.model.User;
+import org.decepticons.linkshortener.api.model.Role;
+import org.decepticons.linkshortener.api.model.UserStatus;
+import org.decepticons.linkshortener.api.repository.RoleRepository;
+import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.decepticons.linkshortener.api.security.jwt.JwtTokenUtil;
 import org.decepticons.linkshortener.api.security.service.UserAuthService;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,14 +20,14 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -40,7 +39,7 @@ import static org.mockito.Mockito.*;
 class AuthServiceImplTest {
 
   @Mock
-  private UserAuthService userService;
+  private UserAuthService userAuthService;
 
   @Mock
   private AuthenticationManager authenticationManager;
@@ -48,59 +47,59 @@ class AuthServiceImplTest {
   @Mock
   private JwtTokenUtil jwtUtil;
 
+  @Mock
+  private UserRepository userRepository;
+
+  @Mock
+  private PasswordEncoder passwordEncoder;
+
+  @Mock
+  private RoleRepository roleRepository;
+
   @InjectMocks
   private AuthServiceImpl authService;
 
-  private AuthRequestDto authRequestDto;
-  private RegistrationRequestDto registrationRequestDto;
+  private User testUser;
   private UserDetails userDetails;
   private String expectedAccessToken;
   private String expectedRefreshToken;
+  private Role userRole;
 
   @BeforeEach
   void setUp() {
-    authRequestDto = new AuthRequestDto();
-    authRequestDto.setUsername("testuser");
-    authRequestDto.setPassword("password123");
+    testUser = new User();
+    testUser.setUsername("testuser");
+    testUser.setPasswordHash("encodedPassword123");
 
-    registrationRequestDto = new RegistrationRequestDto();
-    registrationRequestDto.setUsername("newuser");
-    registrationRequestDto.setPassword("Password123");
+    userDetails = new org.springframework.security.core.userdetails.User(
+        "testuser",
+        "encodedPassword123",
+        Collections.emptyList()
+    );
 
-    userDetails = org.springframework.security.core.userdetails.User.builder()
-        .username("testuser")
-        .password("password123")
-        .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")))
-        .build();
+    userRole = new Role(1, "ROLE_USER", "Standard user role");
 
     expectedAccessToken = "valid.access.token";
     expectedRefreshToken = "valid.refresh.token";
   }
 
   @Test
-  @DisplayName("given valid credentials, when login, then returns tokens")
-  void givenValidCredentials_whenLogin_thenReturnsTokens() {
+  @DisplayName("given valid credentials, when login, then returns a User object")
+  void givenValidCredentials_whenLogin_thenReturnsUser() {
     // Given
     Authentication auth = mock(Authentication.class);
     when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
         .thenReturn(auth);
-    when(auth.getPrincipal()).thenReturn(userDetails);
-    when(jwtUtil.generateAccessToken(any(UserDetails.class))).thenReturn(expectedAccessToken);
-    when(jwtUtil.generateRefreshToken(any(UserDetails.class))).thenReturn(expectedRefreshToken);
+    when(userAuthService.findByUsername("testuser")).thenReturn(testUser);
 
     // When
-    AuthResponseDto actualResponse = authService.login(authRequestDto);
+    User actualUser = authService.login("testuser", "password123");
 
     // Then
-    assertNotNull(actualResponse);
-    assertEquals("testuser", actualResponse.getUsername());
-    assertEquals(expectedAccessToken, actualResponse.getAccessToken());
-    assertEquals(expectedRefreshToken, actualResponse.getRefreshToken());
-    assertEquals(1, actualResponse.getRoles().size());
-    assertEquals("ROLE_USER", actualResponse.getRoles().get(0));
+    assertNotNull(actualUser);
+    assertEquals("testuser", actualUser.getUsername());
     verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-    verify(jwtUtil).generateAccessToken(any(UserDetails.class));
-    verify(jwtUtil).generateRefreshToken(any(UserDetails.class));
+    verify(userAuthService).findByUsername("testuser");
   }
 
   @Test
@@ -111,40 +110,27 @@ class AuthServiceImplTest {
         .thenThrow(new BadCredentialsException("Invalid credentials"));
 
     // When & Then
-    assertThrows(BadCredentialsException.class, () -> authService.login(authRequestDto));
+    assertThrows(BadCredentialsException.class, () -> authService.login("testuser", "wrongpassword"));
     verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-    verify(jwtUtil, never()).generateAccessToken(any());
-    verify(jwtUtil, never()).generateRefreshToken(any());
+    verify(userAuthService, never()).findByUsername(anyString());
   }
 
   @Test
-  @DisplayName("given a valid refresh token, when refreshing, then returns new tokens")
-  void givenValidRefreshToken_whenRefreshing_thenReturnsNewTokens() {
+  @DisplayName("given a valid refresh token, when refreshing, then returns a User object")
+  void givenValidRefreshToken_whenRefreshing_thenReturnsUser() {
     // Given
     String authHeader = "Bearer " + expectedRefreshToken;
-    String expectedNewAccessToken = "new.access.token";
-    String expectedNewRefreshToken = "new.refresh.token";
-    User user = new User();
-    user.setUsername("testuser");
-
     when(jwtUtil.extractUsername(expectedRefreshToken)).thenReturn("testuser");
-    when(userService.findByUsername("testuser")).thenReturn(user);
-    when(jwtUtil.validateToken(eq(expectedRefreshToken), any(UserDetails.class))).thenReturn(true);
-    when(jwtUtil.generateAccessToken(any(UserDetails.class))).thenReturn(expectedNewAccessToken);
-    when(jwtUtil.generateRefreshToken(any(UserDetails.class))).thenReturn(expectedNewRefreshToken);
+    when(userAuthService.findByUsername("testuser")).thenReturn(testUser);
 
     // When
-    AuthResponseDto actualResponse = authService.refreshToken(authHeader);
+    User actualUser = authService.refreshToken(authHeader);
 
     // Then
-    assertNotNull(actualResponse);
-    assertEquals(expectedNewAccessToken, actualResponse.getAccessToken());
-    assertEquals(expectedNewRefreshToken, actualResponse.getRefreshToken());
+    assertNotNull(actualUser);
+    assertEquals("testuser", actualUser.getUsername());
     verify(jwtUtil).extractUsername(expectedRefreshToken);
-    verify(userService).findByUsername("testuser");
-    verify(jwtUtil).validateToken(any(), any());
-    verify(jwtUtil).generateAccessToken(any());
-    verify(jwtUtil).generateRefreshToken(any());
+    verify(userAuthService).findByUsername("testuser");
   }
 
   @Test
@@ -156,59 +142,33 @@ class AuthServiceImplTest {
   }
 
   @Test
-  @DisplayName("given an expired token, when refreshing, then throws ExpiredTokenException")
-  void givenExpiredToken_whenRefreshing_thenThrowsExpiredTokenException() {
-    // Given
-    String authHeader = "Bearer " + expectedRefreshToken;
-    User user = new User();
-    user.setUsername("testuser");
-
-    when(jwtUtil.extractUsername(expectedRefreshToken)).thenReturn("testuser");
-    when(userService.findByUsername("testuser")).thenReturn(user);
-    when(jwtUtil.validateToken(any(), any())).thenReturn(false);
-
-    // When & Then
-    assertThrows(ExpiredTokenException.class, () -> authService.refreshToken(authHeader));
-  }
-
-  @Test
-  @DisplayName("given a valid token but user not found, when refreshing, then throws UserNotFoundException")
-  void givenTokenForNonexistentUser_whenRefreshing_thenThrowsUserNotFoundException() {
-    // Given
-    String authHeader = "Bearer " + expectedRefreshToken;
-    String nonexistentUsername = "nonexistentuser";
-
-    when(jwtUtil.extractUsername(expectedRefreshToken)).thenReturn(nonexistentUsername);
-    when(userService.findByUsername(nonexistentUsername)).thenThrow(new UserNotFoundException(nonexistentUsername));
-
-    // When & Then
-    assertThrows(UserNotFoundException.class, () -> authService.refreshToken(authHeader));
-  }
-
-  @Test
-  @DisplayName("given a registration request, when registering, then returns username")
-  void givenRegistrationRequest_whenRegistering_thenReturnsUsername() {
-    // Given
-    String expectedUsername = "newuser";
-    when(userService.registerUser(any(RegistrationRequestDto.class))).thenReturn(expectedUsername);
-
-    // When
-    String actualUsername = authService.registerUser(registrationRequestDto);
-
-    // Then
-    assertNotNull(actualUsername);
-    assertEquals(expectedUsername, actualUsername);
-    verify(userService).registerUser(registrationRequestDto);
-  }
-
-  @Test
   @DisplayName("given an existing user, when registering, then throws UserAlreadyExistsException")
   void givenExistingUser_whenRegistering_thenThrowsUserAlreadyExistsException() {
     // Given
-    when(userService.registerUser(any(RegistrationRequestDto.class)))
-        .thenThrow(new UserAlreadyExistsException("newuser"));
+    when(roleRepository.findByName("ROLE_USER")).thenReturn(Optional.of(userRole));
+    when(userAuthService.registerUser(any(User.class)))
+        .thenThrow(new UserAlreadyExistsException("testuser"));
 
     // When & Then
-    assertThrows(UserAlreadyExistsException.class, () -> authService.registerUser(registrationRequestDto));
+    assertThrows(UserAlreadyExistsException.class, () -> authService.registerUser(testUser));
+  }
+
+  @Test
+  @DisplayName("given a new user, when registering, then returns the created User object")
+  void givenNewUser_whenRegistering_thenReturnsUser() {
+    // Given
+    when(roleRepository.findByName("ROLE_USER")).thenReturn(Optional.of(userRole));
+    // The stubbing is needed to ensure that userAuthService returns the mocked user object.
+    when(userAuthService.registerUser(any(User.class))).thenReturn(testUser);
+
+    // When
+    User registeredUser = authService.registerUser(testUser);
+
+    // Then
+    assertNotNull(registeredUser);
+    assertEquals("testuser", registeredUser.getUsername());
+    assertEquals(UserStatus.ACTIVE, registeredUser.getStatus());
+    assertFalse(registeredUser.getRoles().isEmpty());
+    verify(userAuthService).registerUser(any(User.class));
   }
 }

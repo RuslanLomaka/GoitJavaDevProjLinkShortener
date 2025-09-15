@@ -6,6 +6,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -41,18 +42,17 @@ import org.hibernate.annotations.UpdateTimestamp;
  * </ul>
  *
  * @since 1.0
- * @author Ruslan Lomaka
+ * author Ruslan Lomaka
  */
-
 @Getter
+@Setter
 @Entity
 @Table(name = "users",
     uniqueConstraints = @UniqueConstraint(name = "uk_users_username", columnNames = "username"))
 public class User {
 
   @Id
-  @GeneratedValue
-//  @Setter
+  @GeneratedValue(strategy = GenerationType.UUID)
   @Column(name = "id", nullable = false, updatable = false)
   private UUID id;
 
@@ -107,7 +107,6 @@ public class User {
    * Sets the username for this user.
    * The username must be a non-null, non-blank value with a maximum length of 64 characters,
    * as enforced by the database column constraint.
-   * </p>
    *
    * @param username the new username to assign to this user
    * @throws IllegalArgumentException if the username is null, blank, or exceeds 64 characters
@@ -130,4 +129,6 @@ public class User {
   public void setRoles(final Set<Role> newRoles) {
     this.roles = newRoles;
   }
+
+
 }

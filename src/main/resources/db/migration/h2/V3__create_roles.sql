@@ -1,6 +1,6 @@
 -- V3__create_roles.sql
 create table if not exists roles (
-    id smallint primary key,
+    id int primary key,
     name varchar(32) not null,
     description varchar(255)
 );
@@ -9,7 +9,7 @@ create unique index if not exists uk_roles_name on roles (name);
 
 create table if not exists users_roles (
     user_id uuid not null,
-    role_id smallint not null,
+    role_id int not null,
     primary key (user_id, role_id),
     foreign key (user_id) references users (id),
     foreign key (role_id) references roles (id)

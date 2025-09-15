@@ -1,6 +1,7 @@
 package org.decepticons.linkshortener.api.repository;
 
 import java.util.Optional;
+import java.util.UUID;
 import org.decepticons.linkshortener.api.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -10,7 +11,8 @@ import org.springframework.stereotype.Repository;
  * Provides CRUD operations and custom queries for retrieving users by username.
  */
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, UUID> {
+
   /**
    * Finds a user by their unique username.
    *

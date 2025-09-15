@@ -4,12 +4,11 @@ package org.decepticons.linkshortener.api.controller;
 import jakarta.servlet.http.HttpServletResponse;
 import org.decepticons.linkshortener.api.dto.LinkResponseDto;
 import org.decepticons.linkshortener.api.model.User;
-import org.decepticons.linkshortener.api.service.LinkService;
+import org.decepticons.linkshortener.api.service.impl.LinkServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 
 
 import java.io.IOException;
@@ -24,7 +23,7 @@ class RedirectControllerTest {
   @InjectMocks
   private RedirectController redirectController;
   @Mock
-  private LinkService linkService;
+  private LinkServiceImpl linkServiceImpl;
   @Mock
   private HttpServletResponse httpServletResponse;
 
@@ -46,16 +45,16 @@ class RedirectControllerTest {
     );
 
 
-    when(linkService.getLinkByCode(code)).thenReturn(responseDto);
-    when(linkService.incrementClicks(responseDto)).thenReturn(responseDto);
-    when(linkService.validateLink(responseDto)).thenReturn(true);
+    when(linkServiceImpl.getLinkByCode(code)).thenReturn(responseDto);
+    when(linkServiceImpl.incrementClicks(responseDto)).thenReturn(responseDto);
+    when(linkServiceImpl.validateLink(responseDto)).thenReturn(true);
     doNothing().when(httpServletResponse).sendRedirect(responseDto.originalUrl());
 
 
     redirectController.redirect(code, httpServletResponse);
 
     verify(httpServletResponse, times(1)).sendRedirect("https://www.example.com");
-    verify(linkService, times(1)).incrementClicks(responseDto);
+    verify(linkServiceImpl, times(1)).incrementClicks(responseDto);
   }
 
   @Test
@@ -75,8 +74,8 @@ class RedirectControllerTest {
         owner.getId()
     );
 
-    when(linkService.getLinkByCode(code)).thenReturn(responseDto);
-    when(linkService.validateLink(responseDto)).thenReturn(false );
+    when(linkServiceImpl.getLinkByCode(code)).thenReturn(responseDto);
+    when(linkServiceImpl.validateLink(responseDto)).thenReturn(false );
 
     Exception ex = null;
 

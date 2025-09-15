@@ -7,7 +7,7 @@ import org.decepticons.linkshortener.api.dto.UrlRequestDto;
 import org.decepticons.linkshortener.api.exception.NoSuchUserFoundInTheSystemException;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.service.LinkService;
-import org.decepticons.linkshortener.api.service.UserService;
+import org.decepticons.linkshortener.api.service.impl.UserServiceImpl;
 import org.decepticons.linkshortener.api.v1.controller.LinkCrudController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,7 +41,7 @@ class LinkCrudControllerTest {
   private LinkService linkService;
 
   @Mock
-  UserService userService;
+  UserServiceImpl userServiceImpl;
 
 
   @InjectMocks
@@ -79,10 +79,8 @@ class LinkCrudControllerTest {
         fakeUser.getId()
     );
 
-    when(userService.getCurrentUser()).thenReturn(fakeUser);
 
-
-    when(linkService.createLink(urlRequestDto, fakeUser)).thenReturn(fakeResponse);
+    when(linkService.createLink(urlRequestDto)).thenReturn(fakeResponse);
 
 
     ResponseEntity<LinkResponseDto> response = linkController.createLink(urlRequestDto);
@@ -93,36 +91,33 @@ class LinkCrudControllerTest {
     assertEquals("https://example.com/some/long/url", response.getBody().originalUrl());
 
 
-    verify(userService).getCurrentUser();
-    verify(linkService).createLink(urlRequestDto, fakeUser);
+
+    verify(linkService).createLink(urlRequestDto);
 
   }
 
 
   @Test
   @DisplayName("Create Short Link - User Not Found")
-  void testCreateShortLink_UserNotFound() {
-
+  void testCreateShortLink_UserNotFound_Controller() {
     UrlRequestDto urlRequestDto = new UrlRequestDto();
     urlRequestDto.setUrl("https://example.com/some/long/url");
 
 
-    when(userService.getCurrentUser())
-        .thenThrow(new NoSuchUserFoundInTheSystemException("No such user", "someName"));
+    when(linkService.createLink(Mockito.any(UrlRequestDto.class)))
+        .thenThrow(new NoSuchUserFoundInTheSystemException("User not found", "some-user-id"));
 
+    NoSuchUserFoundInTheSystemException ex = assertThrows(
+        NoSuchUserFoundInTheSystemException.class,
+        () -> linkController.createLink(urlRequestDto)
+    );
 
-    Exception ex = null;
-    try {
-      linkController.createLink(urlRequestDto);
-    }catch (Exception exception){
-      ex = exception;
-    }
+    assertEquals("User not found", ex.getMessage());
 
-    assertNotNull(ex);
-    assertInstanceOf(NoSuchUserFoundInTheSystemException.class, ex);
-
-    verify(linkService, Mockito.never()).createLink(Mockito.any(), Mockito.any());
+    verify(linkService).createLink(urlRequestDto);
   }
+
+
 
   @Test
   @DisplayName("Get All My Links - Success")
@@ -222,8 +217,11 @@ class LinkCrudControllerTest {
   void testDeleteLink_SUCCESS() {
 
     UUID linkId = UUID.randomUUID();
+    String mockCode = "abc123";
 
-    doNothing().when(linkService).deleteLink(linkId);
+    ResponseEntity<Void> mockResponse = ResponseEntity.noContent().build();
+
+    when(linkService.deleteLink(linkId)).thenReturn(mockCode);
 
     ResponseEntity<Void> response = linkController.deleteLink(linkId);
 

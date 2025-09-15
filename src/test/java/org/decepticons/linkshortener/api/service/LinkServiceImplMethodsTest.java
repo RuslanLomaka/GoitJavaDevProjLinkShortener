@@ -5,7 +5,8 @@ import org.decepticons.linkshortener.api.model.Link;
 import org.decepticons.linkshortener.api.model.LinkStatus;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.repository.LinkRepository;
-import org.decepticons.linkshortener.api.repository.UserRepository;
+import org.decepticons.linkshortener.api.service.impl.LinkServiceImpl;
+import org.decepticons.linkshortener.api.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,18 +31,16 @@ import java.util.UUID;
 
 
 @ExtendWith(MockitoExtension.class)
-public class LinkServiceMethodsTest {
+public class LinkServiceImplMethodsTest {
   @Mock
   private LinkRepository linkRepository;
 
   @Mock
-  private UserService userService;
+  private UserServiceImpl userServiceImpl;
 
-  @Mock
-  private CacheEvictService cacheEvictService;
 
   @InjectMocks
-  private LinkService linkService;
+  private LinkServiceImpl linkService;
 
   private final UUID testUserId = UUID.randomUUID();
   private final String testUsername = "testuser";
@@ -73,7 +72,7 @@ public class LinkServiceMethodsTest {
     Page<Link> mockPage = new PageImpl<>(List.of(link1));
 
 
-    when(userService.getCurrentUserId()).thenReturn(testUserId);
+    when(userServiceImpl.getCurrentUserId()).thenReturn(testUserId);
     when(linkRepository.findAllByOwnerId(eq(testUserId), any(Pageable.class)))
         .thenReturn(mockPage);
 
@@ -93,7 +92,7 @@ public class LinkServiceMethodsTest {
 
     Page<Link> mockPage = new PageImpl<>(List.of(link1));
 
-    when(userService.getCurrentUserId()).thenReturn(testUserId);
+    when(userServiceImpl.getCurrentUserId()).thenReturn(testUserId);
     when(linkRepository.findAllByOwnerIdAndStatus(eq(testUserId), eq(LinkStatus.ACTIVE), any(Pageable.class)))
         .thenReturn(mockPage);
 
@@ -115,13 +114,12 @@ public class LinkServiceMethodsTest {
     link.setCode("abc123");
     link.setOwner(owner);
 
-    when(userService.getCurrentUserId()).thenReturn(testUserId);
+    when(userServiceImpl.getCurrentUserId()).thenReturn(testUserId);
     when(linkRepository.findById(linkId)).thenReturn(Optional.of(link));
 
     linkService.deleteLink(linkId);
 
     verify(linkRepository, times(1)).delete(link);
-    verify(cacheEvictService, times(1)).evictLink("abc123");
   }
 
 

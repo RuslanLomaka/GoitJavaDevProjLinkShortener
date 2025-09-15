@@ -7,6 +7,9 @@ import org.decepticons.linkshortener.api.model.LinkStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -51,4 +54,13 @@ public interface LinkRepository extends JpaRepository<Link, UUID> {
    * @return a {@link Page} of {@link Link} objects belonging to the user with the specified status
    */
   Page<Link> findAllByOwnerIdAndStatus(UUID ownerId, LinkStatus status, Pageable pageable);
+
+
+  @Modifying(clearAutomatically = true, flushAutomatically = true)
+  @Query(value = """
+    UPDATE links
+    SET clicks = clicks + 1, last_accessed_at = now()
+    WHERE code = :code
+""", nativeQuery = true)
+  int incrementClicksByCodeNative(@Param("code") String code);
 }

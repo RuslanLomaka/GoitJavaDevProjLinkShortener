@@ -2,16 +2,37 @@ package org.decepticons.linkshortener.api.controller;
 
 import java.time.Instant;
 import java.util.Map;
-
-import org.decepticons.linkshortener.api.exception.*;
+import org.decepticons.linkshortener.api.exception.ExpiredTokenException;
+import org.decepticons.linkshortener.api.exception.InvalidPasswordException;
+import org.decepticons.linkshortener.api.exception.InvalidTokenException;
+import org.decepticons.linkshortener.api.exception.NoSuchShortLinkFoundInTheSystemException;
+import org.decepticons.linkshortener.api.exception.NoSuchUserFoundInTheSystemException;
+import org.decepticons.linkshortener.api.exception.ShortLinkIsOutOfDateException;
+import org.decepticons.linkshortener.api.exception.UserAlreadyExistsException;
+import org.decepticons.linkshortener.api.exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+
+
+/**
+ * Global exception handler for managing application-wide exceptions.
+ */
 @ControllerAdvice
 public class GlobalExceptionHandlerController {
 
+
+  /**
+   * Builds a standardized error response.
+   *
+   * @param status  The HTTP status to be returned.
+   * @param error   A brief description of the error.
+   * @param message A detailed message about the error.
+   * @param details Additional details about the error.
+   * @return A ResponseEntity containing the error details.
+   */
   private ResponseEntity<Map<String, Object>> buildErrorResponse(
       final HttpStatus status,
       final String error,
@@ -25,6 +46,16 @@ public class GlobalExceptionHandlerController {
         "details", details
     ));
   }
+
+  /**
+   * Builds a standardized error response.
+   *
+   * @param status  The HTTP status to be returned.
+   * @param error   A brief description of the error.
+   * @param message A detailed message about the error.
+   * @return A ResponseEntity containing the error details.
+   */
+
 
   private ResponseEntity<Map<String, Object>> buildErrorResponseSecurity(
       final HttpStatus status,
@@ -126,29 +157,62 @@ public class GlobalExceptionHandlerController {
         ex.getMessage());
   }
 
-  // === Link Shortener специфичные ошибки ===
+
+  /**
+   * Handles exceptions when no such user is found in the system.
+   *
+   * @param ex the exception instance
+   *
+   * @return a ResponseEntity with error details
+   */
+
   @ExceptionHandler(NoSuchUserFoundInTheSystemException.class)
-  public ResponseEntity<Map<String, Object>> handleNoSuchUser(NoSuchUserFoundInTheSystemException ex) {
+  public ResponseEntity<Map<String, Object>> handleNoSuchUser(
+      NoSuchUserFoundInTheSystemException ex) {
+
     return buildErrorResponse(
         HttpStatus.NOT_FOUND,
         "User Not Found",
         "No such user in the system",
-        Map.of("username", ex.getUsername())
+        Map.of(
+            "username", ex.getUsername()
+        )
     );
   }
 
+  /**
+   * Handles exceptions when no such short link is found in the system.
+   *
+   * @param ex Exception instance
+   *
+   * @return Response entity with error details
+   */
+
   @ExceptionHandler(NoSuchShortLinkFoundInTheSystemException.class)
-  public ResponseEntity<Map<String, Object>> handleNoSuchLink(NoSuchShortLinkFoundInTheSystemException ex) {
+  public ResponseEntity<Map<String, Object>> handleNoSuchLink(
+      NoSuchShortLinkFoundInTheSystemException ex) {
+
     return buildErrorResponse(
         HttpStatus.NOT_FOUND,
         "Short Link Not Found",
         "No such short link in the system",
-        Map.of("shortLink", ex.getShortLink())
+        Map.of(
+            "shortLink", ex.getShortLink()
+        )
     );
   }
 
+  /**
+   * Handles exceptions when a short link is out of date.
+   *
+   * @param ex Exception instance
+   *
+   * @return Response entity with error details
+   */
+
   @ExceptionHandler(ShortLinkIsOutOfDateException.class)
-  public ResponseEntity<Map<String, Object>> handleShortLinkOutOfDate(ShortLinkIsOutOfDateException ex) {
+  public ResponseEntity<Map<String, Object>> handleShortLinkOutOfDate(
+      ShortLinkIsOutOfDateException ex) {
     return buildErrorResponse(
         HttpStatus.GONE,
         "Short Link Expired",

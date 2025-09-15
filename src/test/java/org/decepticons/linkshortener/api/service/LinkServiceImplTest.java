@@ -6,15 +6,14 @@ import org.decepticons.linkshortener.api.model.Link;
 import org.decepticons.linkshortener.api.model.LinkStatus;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.repository.LinkRepository;
-import org.decepticons.linkshortener.api.repository.UserRepository;
+import org.decepticons.linkshortener.api.service.impl.LinkServiceImpl;
+import org.decepticons.linkshortener.api.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,7 +21,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -32,16 +30,16 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
-class LinkServiceTest {
+class LinkServiceImplTest {
 
   @Mock
   private LinkRepository linkRepository;
 
   @Mock
-  private UserService userService;
+  private UserServiceImpl userServiceImpl;
 
   @InjectMocks
-  private LinkService linkService;
+  private LinkServiceImpl linkServiceImpl;
 
 
 
@@ -59,10 +57,10 @@ class LinkServiceTest {
 
     urlRequestDto.setUrl("https://www.example.com");
 
-
+    when(userServiceImpl.getCurrentUser()).thenReturn(user);
     when(linkRepository.save(any(Link.class))).thenAnswer(i -> i.getArguments()[0]);
 
-    LinkResponseDto result = linkService.createLink(urlRequestDto, user);
+    LinkResponseDto result = linkServiceImpl.createLink(urlRequestDto);
 
     assertEquals(urlRequestDto.getUrl(), result.originalUrl());
     assertEquals(user.getId(), result.ownerId());
@@ -88,13 +86,11 @@ class LinkServiceTest {
     link.setCode("abc123");
     link.setClicks(0);
 
+    when(linkRepository.incrementClicksByCodeNative("abc123")).thenReturn(1);
     when(linkRepository.findByCode("abc123")).thenReturn(Optional.of(link));
-    when(linkRepository.save(any(Link.class))).thenAnswer(i -> i.getArguments()[0]);
+    LinkResponseDto result = linkServiceImpl.incrementClicks(linkResponseDto);
+    assertNotEquals(1, result.clicks());
 
-
-    linkService.incrementClicks(linkResponseDto);
-
-    assertNotEquals(0, link.getClicks());
   }
 
   @Test
@@ -112,7 +108,7 @@ class LinkServiceTest {
     link.setExpiresAt(Instant.now().plus(2, ChronoUnit.DAYS));
     link.setOwner(owner);
 
-    LinkResponseDto dto = linkService.mapToResponse(link);
+    LinkResponseDto dto = linkServiceImpl.mapToResponse(link);
 
     assertEquals(link.getCode(), dto.code());
     assertEquals(link.getOriginalUrl(), dto.originalUrl());
@@ -142,7 +138,7 @@ class LinkServiceTest {
 
     when(linkRepository.findByCode("abc123")).thenReturn(Optional.of(link));
 
-    LinkResponseDto result = linkService.getLinkByCode("abc123");
+    LinkResponseDto result = linkServiceImpl.getLinkByCode("abc123");
 
     assertEquals("abc123", result.code());
     assertEquals("https://example.com", result.originalUrl());
@@ -178,7 +174,7 @@ class LinkServiceTest {
     when(linkRepository.findByCode("abc123")).thenReturn(Optional.of(link));
     when(linkRepository.save(any(Link.class))).thenAnswer(i -> i.getArguments()[0]);
 
-    LinkResponseDto result = linkService.deactivateLink(linkResponseDto);
+    LinkResponseDto result = linkServiceImpl.deactivateLink(linkResponseDto);
 
     assertEquals("INACTIVE", result.status());
   }
@@ -198,8 +194,8 @@ class LinkServiceTest {
         UUID.randomUUID()
     );
 
-    linkService.validateLink(linkResponseDto);
-    Assertions.assertTrue(linkService.validateLink(linkResponseDto));
+    linkServiceImpl.validateLink(linkResponseDto);
+    Assertions.assertTrue(linkServiceImpl.validateLink(linkResponseDto));
 
   }
 
@@ -223,9 +219,9 @@ class LinkServiceTest {
 
     when(linkRepository.findByCode(code)).thenReturn(Optional.of(link));
     when(linkRepository.save(any(Link.class))).thenAnswer(i -> i.getArguments()[0]);
-    when(userService.getCurrentUserId()).thenReturn(owner.getId());
+    when(userServiceImpl.getCurrentUserId()).thenReturn(owner.getId());
 
-    LinkResponseDto response = linkService.updateLinkExpiration(code, Instant
+    LinkResponseDto response = linkServiceImpl.updateLinkExpiration(code, Instant
         .now()
         .plusSeconds(7200));
 

@@ -10,6 +10,9 @@
 logging:
   level:
     org.springdoc: DEBUG
+    root: DEBUG              # set global logging to DEBUG
+    org.springframework: INFO # optional: keep Spring framework logs at INFO to reduce noise
+    com.yourpackage: DEBUG    # set your own package to DEBUG
 
 springdoc:
   api-docs:
@@ -21,7 +24,7 @@ springdoc:
 
 spring:
   profiles:
-    default: dev
+    default: dev   # default profile if none specified
 
 server:
   port: ${SERVER_PORT:8080}
@@ -30,7 +33,10 @@ link:
   expiration-days: ${LINK_EXPIRATION_DAYS:7}
 
 jwt:
+  secret: ${JWT_SECRET:dev-secret-change-me}
   ttl-seconds: ${JWT_TTL_SECONDS:3600}
+
+
 
 ---
 # ===================== DEV (H2 in-memory DB) =====================

@@ -1,283 +1,91 @@
 package org.decepticons.linkshortener.api.service;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Random;
 import java.util.UUID;
-
 import org.decepticons.linkshortener.api.dto.LinkResponseDto;
 import org.decepticons.linkshortener.api.dto.UrlRequestDto;
-import org.decepticons.linkshortener.api.exception.InvalidExpirationDateException;
-import org.decepticons.linkshortener.api.exception.NoSuchShortLinkFoundInTheSystemException;
-import org.decepticons.linkshortener.api.exception.NoSuchUserFoundInTheSystemException;
-import org.decepticons.linkshortener.api.model.Link;
-import org.decepticons.linkshortener.api.model.LinkStatus;
-import org.decepticons.linkshortener.api.model.User;
-import org.decepticons.linkshortener.api.repository.LinkRepository;
-import org.decepticons.linkshortener.api.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
 
 /**
- * Application service responsible for creating and maintaining {@link Link} entities.
- * Provides operations for link creation, click tracking, simple DTO mapping,
- * and basic liveness checks (active + not expired).
- * </p>
+ * Service interface for managing links in the link shortener application.
+ * Provides methods for creating, retrieving, updating, and deleting links,
+ * as well as tracking link clicks and validating link status.
  */
-
-
-@Service
-public class LinkService {
-
-  @Value("${link.expiration-days}")
-  private long linkExpirationDays;
-
-  private final LinkRepository linkRepository;
-
-  private final CacheEvictService cacheEvictService;
-  private final UserService userService;
-  private final Random random = new Random();
-
+public interface LinkService {
 
   /**
-   * Creates a new {@code LinkService}.
+   * Creates and persists a new shortened link based on the provided original URL.
    *
-   * @param linkRepository repository used to persist and load {@link Link} entities
+   * @param originalUrl the original URL to be shortened
+   * @return a LinkResponseDto containing details of the created shortened link
    */
-
-  public LinkService(LinkRepository linkRepository,
-                     CacheEvictService cacheEvictService,
-                     UserService userService) {
-    this.linkRepository = linkRepository;
-    this.cacheEvictService = cacheEvictService;
-    this.userService = userService;
-  }
-
+  LinkResponseDto createLink(UrlRequestDto originalUrl);
 
   /**
-   * Creates and persists a new {@link Link}.
+   * Increments the click count for the specified link.
    *
-   * @param originalUrl the original long URL to be shortened
-   * @param owner       the user who owns the link (must be non-null and managed)
-   * @return a {@link LinkResponseDto} representing the newly created link
+   * @param link the LinkResponseDto representing the link to update
+   * @return the updated LinkResponseDto with incremented click count
    */
-  @Transactional
-  public LinkResponseDto createLink(UrlRequestDto originalUrl, User owner) {
-    Link link = new Link();
-    link.setOriginalUrl(originalUrl.getUrl());
-    link.setOwner(owner);
-
-    link.setCode(generateRandomCode());
-    link.setExpiresAt(Instant.now().plus(linkExpirationDays, ChronoUnit.DAYS));
-    link.setStatus(LinkStatus.ACTIVE);
-
-    linkRepository.save(link);
-
-    return mapToResponse(link);
-  }
-
+  LinkResponseDto incrementClicks(LinkResponseDto link);
 
   /**
-   * Increments the click counter of the given link and persists the change.
-   * This should be invoked whenever the shortened URL is accessed.
-   * Internally, the entity updates its {@code lastAccessedAt} timestamp.
-   * </p>
+   * Retrieves a link by its unique short code.
    *
-   * @param link the link whose click counter should be incremented
+   * @param code the unique short code of the link
+   * @return the LinkResponseDto representing the retrieved link
    */
-  @Transactional
-  @CachePut(value = "shortLinksCache", key = "#link.code")
-  public LinkResponseDto incrementClicks(LinkResponseDto link) {
-    Link linkByCode = linkRepository.findByCode(link.code())
-        .orElseThrow(() -> new NoSuchShortLinkFoundInTheSystemException(
-            "No such short link found in the system: " + link.code(),
-            link.code()
-        ));
-    linkByCode.incrementClicks();
-    linkRepository.save(linkByCode);
-
-    return mapToResponse(linkByCode);
-  }
-
+  LinkResponseDto getLinkByCode(String code);
 
   /**
-   * Maps a {@link Link} JPA entity to a transport-friendly {@link LinkResponseDto}.
+   * Deactivates the specified link, preventing further access.
    *
-   * @param link the entity to map
-   * @return a response DTO with the most relevant fields
+   * @param link the LinkResponseDto representing the link to deactivate
+   * @return the updated LinkResponseDto with deactivated status
    */
-  public LinkResponseDto mapToResponse(Link link) {
-    return new LinkResponseDto(
-
-        link.getId(),
-        link.getCode(),
-        link.getOriginalUrl(),
-        link.getCreatedAt(),
-        link.getExpiresAt(),
-        link.getClicks(),
-        link.getStatus().name(),
-        link.getOwner().getId()
-    );
-  }
-
+  LinkResponseDto deactivateLink(LinkResponseDto link);
 
   /**
-   * Generates a pseudo-random short code of fixed length .
+   * Validates whether the specified link is active and not expired.
    *
-   * @return a new short code (e.g., {@code "aZ3fQ1"})
+   * @param link the LinkResponseDto representing the link to validate
+   * @return true if the link is valid (active and not expired), false otherwise
    */
-  private String generateRandomCode() {
-    String chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < 6; i++) {
-      sb.append(chars.charAt(random.nextInt(chars.length())));
-    }
-    return sb.toString();
-  }
-
+  boolean validateLink(LinkResponseDto link);
 
   /**
-   * Retrieves a {@link Link} entity by its short code.
+   * Retrieves a paginated list of all links created by the currently authenticated user.
    *
-   * @param code short link code.
-   * @return Optional<Link>
+   * @param page the page number to retrieve
+   * @param size the number of links per page
+   * @return a Page of LinkResponseDto representing the user's links
    */
-  @Cacheable(value = "shortLinksCache", key = "#code")
-  public LinkResponseDto getLinkByCode(String code) {
-    Link link = linkRepository.findByCode(code)
-        .orElseThrow(() -> new NoSuchShortLinkFoundInTheSystemException(
-            "No such short link found in the system: " + code,
-            code
-        ));
-
-    return mapToResponse(link);
-
-  }
-
+  Page<LinkResponseDto> getAllMyLinks(int page, int size);
 
   /**
-   * Deactivates a link by setting its status to INACTIVE.
+   * Retrieves a paginated list of all active links created by the currently authenticated user.
    *
-   * @param link the link to deactivate
-   * @return the updated {@link LinkResponseDto} with status set to INACTIVE
+   * @param page the page number to retrieve
+   * @param size the number of links per page
+   * @return a Page of LinkResponseDto representing the user's active links
    */
-  @CachePut(value = "shortLinksCache", key = "#link.code")
-  public LinkResponseDto deactivateLink(LinkResponseDto link) {
-    Link linkByCode = linkRepository.findByCode(link.code())
-        .orElseThrow(() -> new NoSuchShortLinkFoundInTheSystemException(
-            "No such short link found in the system: " + link.code(),
-            link.code()
-        ));
-    linkByCode.setStatus(LinkStatus.INACTIVE);
-    linkRepository.save(linkByCode);
-    return mapToResponse(linkByCode);
-  }
-
+  Page<LinkResponseDto> getAllMyActiveLinks(int page, int size);
 
   /**
-   * Validates if a link is active and not expired.
+   * Deletes a link by its unique identifier.
    *
-   * @param link the link to validate
-   * @return {@code true} if the link is active and not expired; {@code false} otherwise
+   * @param linkId the UUID of the link to delete
+   * @return a confirmation message indicating the result of the deletion
    */
-  public boolean validateLink(LinkResponseDto link) {
-    return link.status().equalsIgnoreCase(LinkStatus.ACTIVE.toString())
-        && (link.expiresAt() == null || link.expiresAt().isAfter(Instant.now()));
-  }
-
+  String deleteLink(UUID linkId);
 
   /**
-   * Retrieves all links of the currently authenticated user with pagination.
+   * Updates the expiration date of a link identified by its short code.
    *
-   * @param page the page number to retrieve (0-based)
-   * @param size the number of records per page
-   * @return a {@link Page} of {@link LinkResponseDto} objects representing all user's links
+   * @param code the unique short code of the link to update
+   * @param newExpirationDate the new expiration date to set
+   * @return the updated LinkResponseDto with the new expiration date
    */
-  public Page<LinkResponseDto> getAllMyLinks(int page, int size) {
-    UUID userId = userService.getCurrentUserId();
-    Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-    return linkRepository.findAllByOwnerId(userId, pageable)
-        .map(this::mapToResponse);
-  }
-
-  /**
-   * Retrieves all active links of the currently authenticated user with pagination.
-   *
-   * @param page the page number to retrieve (0-based)
-   * @param size the number of records per page
-   * @return a {@link Page} of {@link LinkResponseDto} objects representing active user's links
-   */
-  public Page<LinkResponseDto> getAllMyActiveLinks(int page, int size) {
-    UUID userId = userService.getCurrentUserId();
-    Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-    return linkRepository.findAllByOwnerIdAndStatus(userId, LinkStatus.ACTIVE, pageable)
-        .map(this::mapToResponse);
-  }
-
-  /**
-   * Deletes a link from the database if it belongs to the currently authenticated user.
-   *
-   * @param linkId the unique identifier of the link to delete
-   */
-  @Transactional
-  public void deleteLink(UUID linkId) {
-    UUID currentUserId = userService.getCurrentUserId();
-
-    Link link = linkRepository.findById(linkId)
-        .orElseThrow(() -> new NoSuchShortLinkFoundInTheSystemException(
-            "No such short link found in the system", linkId.toString()
-        ));
-
-
-    if (!link.getOwner().getId().equals(currentUserId)) {
-      throw new AccessDeniedException("You are not allowed to delete this link");
-    }
-
-    linkRepository.delete(link);
-    cacheEvictService.evictLink(link.getCode());
-  }
-
-  /**
-   * Retrieves the UUID of the currently authenticated user from the security context.
-   *
-   * @return the UUID of the authenticated user
-   */
-
-
-
-
-  @CachePut(value = "shortLinksCache", key = "#code")
-  public LinkResponseDto updateLinkExpiration(String code, Instant newExpirationDate) {
-    Link link = linkRepository.findByCode(code)
-        .orElseThrow(() -> new NoSuchShortLinkFoundInTheSystemException(
-            "No such short link found in the system: " + code,
-            code
-        ));
-
-    if (!link.getOwner().getId().equals(userService.getCurrentUserId())) {
-      throw new AccessDeniedException("You are not allowed to update this link");
-    }
-
-    if (newExpirationDate.isBefore(Instant.now())) {
-      throw new InvalidExpirationDateException(
-          "Expiration date must be in the future",
-          newExpirationDate
-      );
-    }
-
-    link.setExpiresAt(newExpirationDate);
-    linkRepository.save(link);
-
-    return mapToResponse(link);
-  }
+  LinkResponseDto updateLinkExpiration(String code, Instant newExpirationDate);
 }
-

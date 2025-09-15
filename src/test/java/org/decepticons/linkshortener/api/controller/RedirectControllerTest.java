@@ -5,11 +5,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.decepticons.linkshortener.api.dto.LinkResponseDto;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.service.LinkService;
+import org.decepticons.linkshortener.api.v1.controller.unversioned.RedirectController;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 
 
 import java.io.IOException;

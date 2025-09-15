@@ -61,6 +61,7 @@ public class SecurityConfig {
                 "/api/links/**",
 
 // Documentation & health endpoints
+                "/api/v1/cache",
                 "/health",
                 "/h2-console/**",
                 "/swagger-ui.html",

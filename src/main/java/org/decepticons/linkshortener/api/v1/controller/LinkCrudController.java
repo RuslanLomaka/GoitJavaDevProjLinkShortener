@@ -1,26 +1,20 @@
 package org.decepticons.linkshortener.api.v1.controller;
 
 import jakarta.validation.Valid;
+
 import java.util.UUID;
 import org.decepticons.linkshortener.api.dto.LinkResponseDto;
+import org.decepticons.linkshortener.api.dto.UpdateLinkExpirationRequestDto;
 import org.decepticons.linkshortener.api.dto.UrlRequestDto;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.service.LinkService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 /**
  * REST controller for managing short links.
-
  * Provides endpoints for creating, retrieving, and deleting short links.
  * All operations are performed in the context of the currently authenticated user.
  */
@@ -34,8 +28,7 @@ public class LinkCrudController {
   /**
    * Constructs a new {@link LinkCrudController} with the given dependencies.
    *
-   * @param linkService    the service responsible for link business logic
-
+   * @param linkService the service responsible for link business logic
    */
   public LinkCrudController(LinkService linkService) {
     this.linkService = linkService;
@@ -98,4 +91,23 @@ public class LinkCrudController {
     linkService.deleteLink(id);
     return ResponseEntity.noContent().build();
   }
+
+
+
+  /**
+   * Updates the expiration date of a specific link identified by its code.
+   *
+   * @param newExpirationDate DTO containing the new expiration date
+   * @param code the short URL code
+   * @return DTO with information about the updated link
+   */
+  @PatchMapping("/{code}")
+  public ResponseEntity<LinkResponseDto> updateLinkExpiration(
+      @Valid @RequestBody UpdateLinkExpirationRequestDto newExpirationDate,
+      @PathVariable String code) {
+
+      return ResponseEntity
+          .ok(linkService.updateLinkExpiration(code, newExpirationDate.getNewExpirationDate()));
+  }
+
 }

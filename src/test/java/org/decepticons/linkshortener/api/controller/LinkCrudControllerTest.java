@@ -2,6 +2,7 @@ package org.decepticons.linkshortener.api.controller;
 
 
 import org.decepticons.linkshortener.api.dto.LinkResponseDto;
+import org.decepticons.linkshortener.api.dto.UpdateLinkExpirationRequestDto;
 import org.decepticons.linkshortener.api.dto.UrlRequestDto;
 import org.decepticons.linkshortener.api.exception.NoSuchUserFoundInTheSystemException;
 import org.decepticons.linkshortener.api.model.User;
@@ -228,4 +229,34 @@ class LinkCrudControllerTest {
     verify(linkService, times(1)).deleteLink(linkId);
   }
 
+  @Test
+  @DisplayName("Update Link Expiration Date - Success")
+  void testUpdateLinkExpirationDate(){
+
+    String code = "abc123";
+
+    UpdateLinkExpirationRequestDto requestDto
+        = new UpdateLinkExpirationRequestDto(Instant.now().plus(5, ChronoUnit.DAYS));
+
+
+    when(linkService.updateLinkExpiration(code, requestDto.getNewExpirationDate()))
+        .thenReturn(new LinkResponseDto(
+            UUID.randomUUID(),
+            code,
+            "https://example.com/some/long/url",
+            Instant.now(),
+            requestDto.getNewExpirationDate(),
+            0,
+            "ACTIVE",
+            UUID.randomUUID()
+        ));
+
+    ResponseEntity<LinkResponseDto> response = linkController.updateLinkExpiration(requestDto, code);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals(code, response.getBody().code());
+    verify(linkService, times(1))
+        .updateLinkExpiration(code, requestDto.getNewExpirationDate());
+  }
 }

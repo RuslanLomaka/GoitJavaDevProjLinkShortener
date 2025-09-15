@@ -15,6 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 
@@ -27,28 +29,25 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
 class LinkServiceTest {
 
   @Mock
   private LinkRepository linkRepository;
-  @InjectMocks
-  private LinkService linkService;
+
   @Mock
   private UserRepository userRepository;
 
+  @InjectMocks
+  private LinkService linkService;
 
 
 
 
-  @BeforeEach
-  void setUp() {
-    linkRepository = mock(LinkRepository.class);
-    linkService = new LinkService(linkRepository, null, null);
-  }
+
+
 
   @Test
   @DisplayName("Link Creation - Success")
@@ -201,6 +200,41 @@ class LinkServiceTest {
 
     linkService.validateLink(linkResponseDto);
     Assertions.assertTrue(linkService.validateLink(linkResponseDto));
+
+  }
+
+  @Test
+  @DisplayName("Update Link Expiration - Success")
+  void testUpdateLinkExpiration(){
+    String code = "abc123";
+    User owner = new User();
+    owner.setUsername("testUser");
+    owner.setId(UUID.randomUUID());
+
+    Link link = new Link();
+    link.setCode(code);
+    link.setExpiresAt(Instant.now().plusSeconds(3600));
+    link.setStatus(LinkStatus.ACTIVE);
+    link.setOwner(owner);
+
+    Authentication auth = mock(Authentication.class);
+    SecurityContext securityContext = mock(SecurityContext.class);
+    when(securityContext.getAuthentication()).thenReturn(auth);
+    when(auth.getName()).thenReturn("testUser");
+    SecurityContextHolder.setContext(securityContext);
+
+    when(linkRepository.findByCode(code)).thenReturn(Optional.of(link));
+    when(linkRepository.save(any(Link.class))).thenAnswer(i -> i.getArguments()[0]);
+    when(userRepository.findByUsername("testUser")).thenReturn(Optional.of(owner));
+
+    LinkResponseDto response = linkService.updateLinkExpiration(code, Instant
+        .now()
+        .plusSeconds(7200));
+
+    assertNotNull(response);
+    assertEquals(code, response.code());
+    assertEquals(link.getExpiresAt(), response.expiresAt());
+    verify(linkRepository, times(1)).findByCode(code);
 
   }
 }

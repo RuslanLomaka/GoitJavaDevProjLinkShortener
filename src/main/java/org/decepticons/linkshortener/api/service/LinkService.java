@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.decepticons.linkshortener.api.dto.LinkResponseDto;
 import org.decepticons.linkshortener.api.dto.UrlRequestDto;
+import org.decepticons.linkshortener.api.exception.InvalidExpirationDateException;
 import org.decepticons.linkshortener.api.exception.NoSuchShortLinkFoundInTheSystemException;
 import org.decepticons.linkshortener.api.exception.NoSuchUserFoundInTheSystemException;
 import org.decepticons.linkshortener.api.model.Link;
@@ -267,6 +268,31 @@ public class LinkService {
             "No such user found in the system: " + username,
             username
         ));
+  }
+
+  @CachePut(value = "shortLinksCache", key = "#code")
+  public LinkResponseDto updateLinkExpiration(String code, Instant newExpirationDate) {
+    Link link = linkRepository.findByCode(code)
+        .orElseThrow(() -> new NoSuchShortLinkFoundInTheSystemException(
+            "No such short link found in the system: " + code,
+            code
+        ));
+
+    if (!link.getOwner().getId().equals(getCurrentUserId())) {
+      throw new AccessDeniedException("You are not allowed to update this link");
+    }
+
+    if (newExpirationDate.isBefore(Instant.now())) {
+      throw new InvalidExpirationDateException(
+          "Expiration date must be in the future",
+          newExpirationDate
+      );
+    }
+
+    link.setExpiresAt(newExpirationDate);
+    linkRepository.save(link);
+
+    return mapToResponse(link);
   }
 }
 

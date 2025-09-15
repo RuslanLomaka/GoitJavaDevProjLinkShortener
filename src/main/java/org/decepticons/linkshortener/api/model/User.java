@@ -45,6 +45,7 @@ import org.hibernate.annotations.UpdateTimestamp;
  * author Ruslan Lomaka
  */
 @Getter
+@Setter
 @Entity
 @Table(name = "users",
     uniqueConstraints = @UniqueConstraint(name = "uk_users_username", columnNames = "username"))
@@ -128,4 +129,6 @@ public class User {
   public void setRoles(final Set<Role> newRoles) {
     this.roles = newRoles;
   }
+
+
 }

@@ -38,7 +38,7 @@ class LinkServiceTest {
   private LinkRepository linkRepository;
 
   @Mock
-  private UserRepository userRepository;
+  private UserService userService;
 
   @InjectMocks
   private LinkService linkService;
@@ -219,13 +219,11 @@ class LinkServiceTest {
 
     Authentication auth = mock(Authentication.class);
     SecurityContext securityContext = mock(SecurityContext.class);
-    when(securityContext.getAuthentication()).thenReturn(auth);
-    when(auth.getName()).thenReturn("testUser");
     SecurityContextHolder.setContext(securityContext);
 
     when(linkRepository.findByCode(code)).thenReturn(Optional.of(link));
     when(linkRepository.save(any(Link.class))).thenAnswer(i -> i.getArguments()[0]);
-    when(userRepository.findByUsername("testUser")).thenReturn(Optional.of(owner));
+    when(userService.getCurrentUserId()).thenReturn(owner.getId());
 
     LinkResponseDto response = linkService.updateLinkExpiration(code, Instant
         .now()

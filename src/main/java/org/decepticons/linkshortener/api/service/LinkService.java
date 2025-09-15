@@ -42,8 +42,9 @@ public class LinkService {
   private long linkExpirationDays;
 
   private final LinkRepository linkRepository;
-  private final UserRepository userRepository;
+
   private final CacheEvictService cacheEvictService;
+  private final UserService userService;
   private final Random random = new Random();
 
 
@@ -54,11 +55,11 @@ public class LinkService {
    */
 
   public LinkService(LinkRepository linkRepository,
-                     UserRepository userRepository,
-                     CacheEvictService cacheEvictService) {
+                     CacheEvictService cacheEvictService,
+                     UserService userService) {
     this.linkRepository = linkRepository;
-    this.userRepository = userRepository;
     this.cacheEvictService = cacheEvictService;
+    this.userService = userService;
   }
 
 
@@ -202,7 +203,7 @@ public class LinkService {
    * @return a {@link Page} of {@link LinkResponseDto} objects representing all user's links
    */
   public Page<LinkResponseDto> getAllMyLinks(int page, int size) {
-    UUID userId = getCurrentUserId();
+    UUID userId = userService.getCurrentUserId();
     Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
     return linkRepository.findAllByOwnerId(userId, pageable)
         .map(this::mapToResponse);
@@ -216,7 +217,7 @@ public class LinkService {
    * @return a {@link Page} of {@link LinkResponseDto} objects representing active user's links
    */
   public Page<LinkResponseDto> getAllMyActiveLinks(int page, int size) {
-    UUID userId = getCurrentUserId();
+    UUID userId = userService.getCurrentUserId();
     Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
     return linkRepository.findAllByOwnerIdAndStatus(userId, LinkStatus.ACTIVE, pageable)
         .map(this::mapToResponse);
@@ -229,9 +230,8 @@ public class LinkService {
    */
   @Transactional
   public void deleteLink(UUID linkId) {
-    UUID currentUserId = getCurrentUserId();
+    UUID currentUserId = userService.getCurrentUserId();
 
-    getCurrentUserId();
     Link link = linkRepository.findById(linkId)
         .orElseThrow(() -> new NoSuchShortLinkFoundInTheSystemException(
             "No such short link found in the system", linkId.toString()
@@ -251,24 +251,9 @@ public class LinkService {
    *
    * @return the UUID of the authenticated user
    */
-  private UUID getCurrentUserId() {
-    String username = SecurityContextHolder.getContext().getAuthentication().getName();
-    User user = userRepository.findByUsername(username)
-        .orElseThrow(() -> new NoSuchUserFoundInTheSystemException(
-            "No such user found in the system: " + username,
-            username
-        ));
-    return user.getId();
-  }
 
-  public User getCurrentUser() {
-    String username = SecurityContextHolder.getContext().getAuthentication().getName();
-    return userRepository.findByUsername(username)
-        .orElseThrow(() -> new NoSuchUserFoundInTheSystemException(
-            "No such user found in the system: " + username,
-            username
-        ));
-  }
+
+
 
   @CachePut(value = "shortLinksCache", key = "#code")
   public LinkResponseDto updateLinkExpiration(String code, Instant newExpirationDate) {
@@ -278,7 +263,7 @@ public class LinkService {
             code
         ));
 
-    if (!link.getOwner().getId().equals(getCurrentUserId())) {
+    if (!link.getOwner().getId().equals(userService.getCurrentUserId())) {
       throw new AccessDeniedException("You are not allowed to update this link");
     }
 

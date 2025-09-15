@@ -35,7 +35,7 @@ public class LinkServiceMethodsTest {
   private LinkRepository linkRepository;
 
   @Mock
-  private UserRepository userRepository;
+  private UserService userService;
 
   @Mock
   private CacheEvictService cacheEvictService;
@@ -57,7 +57,6 @@ public class LinkServiceMethodsTest {
     User testUser = new User();
     testUser.setId(testUserId);
     testUser.setUsername(testUsername);
-    when(userRepository.findByUsername(testUsername)).thenReturn(Optional.of(testUser));
   }
 
   @AfterEach
@@ -69,10 +68,12 @@ public class LinkServiceMethodsTest {
   @DisplayName("Get All My Links - Success")
   void getAllMyLinks_SUCCESS() {
     Link link1 = new Link();
-    link1.setOwner(userRepository.findByUsername(testUsername).get());
+    link1.setOwner(new User());
 
     Page<Link> mockPage = new PageImpl<>(List.of(link1));
 
+
+    when(userService.getCurrentUserId()).thenReturn(testUserId);
     when(linkRepository.findAllByOwnerId(eq(testUserId), any(Pageable.class)))
         .thenReturn(mockPage);
 
@@ -88,10 +89,11 @@ public class LinkServiceMethodsTest {
   void getAllMyActiveLinks_SUCCESS() {
     Link link1 = new Link();
     link1.setStatus(LinkStatus.ACTIVE);
-    link1.setOwner(userRepository.findByUsername(testUsername).get());
+    link1.setOwner(new User());
 
     Page<Link> mockPage = new PageImpl<>(List.of(link1));
 
+    when(userService.getCurrentUserId()).thenReturn(testUserId);
     when(linkRepository.findAllByOwnerIdAndStatus(eq(testUserId), eq(LinkStatus.ACTIVE), any(Pageable.class)))
         .thenReturn(mockPage);
 
@@ -106,10 +108,14 @@ public class LinkServiceMethodsTest {
   @DisplayName("Delete Link - Success")
   void deleteLink_SUCCESS() {
     UUID linkId = UUID.randomUUID();
+    User owner = new User();
+    owner.setId(testUserId);
+    owner.setUsername(testUsername);
     Link link = new Link();
     link.setCode("abc123");
-    link.setOwner(userRepository.findByUsername(testUsername).get());
+    link.setOwner(owner);
 
+    when(userService.getCurrentUserId()).thenReturn(testUserId);
     when(linkRepository.findById(linkId)).thenReturn(Optional.of(link));
 
     linkService.deleteLink(linkId);

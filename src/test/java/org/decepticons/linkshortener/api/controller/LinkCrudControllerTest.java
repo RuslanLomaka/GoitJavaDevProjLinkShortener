@@ -7,6 +7,7 @@ import org.decepticons.linkshortener.api.dto.UrlRequestDto;
 import org.decepticons.linkshortener.api.exception.NoSuchUserFoundInTheSystemException;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.service.LinkService;
+import org.decepticons.linkshortener.api.service.UserService;
 import org.decepticons.linkshortener.api.v1.controller.LinkCrudController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

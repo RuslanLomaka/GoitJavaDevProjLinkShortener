@@ -10,6 +10,7 @@ import org.decepticons.linkshortener.api.dto.UpdateLinkExpirationRequestDto;
 import org.decepticons.linkshortener.api.dto.UrlRequestDto;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.service.LinkService;
+import org.decepticons.linkshortener.api.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

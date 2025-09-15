@@ -22,7 +22,7 @@ public final class PasswordValidator {
    * Private constructor to prevent instantiation of this utility class.
    */
   private PasswordValidator() {
-    // This constructor intentionally left empty.
+    // no-op
   }
 
   /**

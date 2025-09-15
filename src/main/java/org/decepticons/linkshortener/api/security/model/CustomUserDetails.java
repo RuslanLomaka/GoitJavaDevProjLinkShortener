@@ -2,7 +2,6 @@ package org.decepticons.linkshortener.api.security.model;
 
 import java.io.Serial;
 import java.util.Collection;
-import java.util.Collections;
 import lombok.Getter;
 import org.decepticons.linkshortener.api.model.User;
 import org.springframework.security.core.GrantedAuthority;
@@ -37,17 +36,11 @@ public final class CustomUserDetails implements UserDetails {
   /**
    * Returns the authorities granted to the user.
    *
-   * @return collection of granted authorities
+     * @return collection of granted authorities
    */
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
-    if (user.getStatus() == null) {
-      return Collections.emptyList();
-    }
-    // For this example, we return a single, hardcoded role.
-    return Collections.singletonList(
-        () -> "ROLE_" + user.getStatus().name()
-    );
+    return user.getRoles();
   }
 
   /**
@@ -101,15 +94,5 @@ public final class CustomUserDetails implements UserDetails {
   @Override
   public boolean isCredentialsNonExpired() {
     return true;
-  }
-
-  /**
-   * Indicates whether the user's account is enabled.
-   *
-   * @return true if the user's status is ACTIVE
-   */
-  @Override
-  public boolean isEnabled() {
-    return user.getStatus().name().equals("ACTIVE");
   }
 }

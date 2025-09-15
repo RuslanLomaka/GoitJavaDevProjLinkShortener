@@ -1,124 +1,118 @@
 package org.decepticons.linkshortener.api.security.service.impl;
 
-import java.util.List;
+import java.util.Collections;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.decepticons.linkshortener.api.dto.AuthRequestDto;
-import org.decepticons.linkshortener.api.dto.AuthResponseDto;
-import org.decepticons.linkshortener.api.dto.RegistrationRequestDto;
-import org.decepticons.linkshortener.api.exceptions.ExpiredTokenException;
 import org.decepticons.linkshortener.api.exceptions.InvalidTokenException;
+import org.decepticons.linkshortener.api.model.Role;
 import org.decepticons.linkshortener.api.model.User;
+import org.decepticons.linkshortener.api.model.UserStatus;
+import org.decepticons.linkshortener.api.repository.RoleRepository;
+import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.decepticons.linkshortener.api.security.jwt.JwtTokenUtil;
-import org.decepticons.linkshortener.api.security.model.CustomUserDetails;
 import org.decepticons.linkshortener.api.security.service.AuthService;
 import org.decepticons.linkshortener.api.security.service.UserAuthService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 /**
- * Service implementation for user authentication,
- * token refresh, and registration.
+ * Service implementation for user authentication and authorization.
+ * Handles user login, token refresh, and registration processes.
  */
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-  /** The prefix for the Authorization header. */
+  /**
+   * The prefix for a Bearer token in the Authorization header.
+   */
   private static final String BEARER_PREFIX = "Bearer ";
 
-  /** Service for accessing and managing users. */
-  private final UserAuthService userService;
+  /**
+   * Service for handling user-related authentication operations.
+   */
+  private final UserAuthService userAuthService;
 
-  /** Spring Security authentication manager. */
+  /**
+   * Manages authentication requests and processes them.
+   */
   private final AuthenticationManager authManager;
 
-  /** Utility for generating and validating JWT tokens. */
+  /**
+   * Utility for generating and validating JWT tokens.
+   */
   private final JwtTokenUtil jwtUtil;
 
   /**
-   * Authenticates a user and generates JWT tokens.
+   * Repository for user data access.
+   */
+  private final UserRepository userRepository;
+
+  /**
+   * Encodes and verifies user passwords.
+   */
+  private final PasswordEncoder passwordEncoder;
+
+  /**
+   * Repository for role data access.
+   */
+  private final RoleRepository roleRepository;
+
+
+  /**
+   * Authenticates a user with the provided username and password.
    *
-   * @param request the authentication request containing username and password
-   * @return authentication response with JWT tokens
+   * @param username The user's username.
+   * @param password The user's password.
+   * @return The authenticated User entity.
    */
   @Override
-  public AuthResponseDto login(final AuthRequestDto request) {
-    Authentication auth = authManager.authenticate(
-        new UsernamePasswordAuthenticationToken(
-            request.getUsername(),
-            request.getPassword())
+  public User login(final String username, final String password) {
+    authManager.authenticate(
+        new UsernamePasswordAuthenticationToken(username, password)
     );
-
-    UserDetails details = (UserDetails) auth.getPrincipal();
-    String accessToken = jwtUtil.generateAccessToken(details);
-    String refreshToken = jwtUtil.generateRefreshToken(details);
-
-    List<String> roles = details.getAuthorities().stream()
-        .map(GrantedAuthority::getAuthority)
-        .toList();
-
-    return new AuthResponseDto(
-        details.getUsername(),
-        roles,
-        accessToken,
-        refreshToken
-    );
+    return userAuthService.findByUsername(username);
   }
 
   /**
-   * Refreshes a JWT token if valid.
+   * Refreshes a user's token based on the authorization header.
    *
-   * @param authorizationHeader the Authorization header containing Bearer token
-   * @return authentication response with refreshed JWT token
+   * @param authorizationHeader The header containing the refresh token.
+   * @return The User associated with the refresh token.
+   * @throws InvalidTokenException if the header is missing or malformed.
    */
   @Override
-  public AuthResponseDto refreshToken(final String authorizationHeader) {
+  public User refreshToken(final String authorizationHeader) {
     if (authorizationHeader == null
         || !authorizationHeader.startsWith(BEARER_PREFIX)) {
       throw new InvalidTokenException(
           "Missing or malformed Authorization header"
       );
     }
-
     String jwtToken = authorizationHeader.substring(BEARER_PREFIX.length());
     String username = jwtUtil.extractUsername(jwtToken);
-
-    User user = userService.findByUsername(username);
-    UserDetails details = new CustomUserDetails(user);
-
-    // This is the key change: we validate the refresh token itself.
-    if (!jwtUtil.validateToken(jwtToken, details)) {
-      throw new ExpiredTokenException("Refresh token expired or invalid");
-    }
-
-    // Generate a new pair of access and refresh tokens
-    String newAccessToken = jwtUtil.generateAccessToken(details);
-    String newRefreshToken = jwtUtil.generateRefreshToken(details);
-
-    List<String> roles = details.getAuthorities().stream()
-        .map(GrantedAuthority::getAuthority)
-        .toList();
-
-    return new AuthResponseDto(
-        details.getUsername(),
-        roles,
-        newAccessToken,
-        newRefreshToken
-    );
+    return userAuthService.findByUsername(username);
   }
 
   /**
-   * Registers a new user.
+   * Registers a new user with a default 'ROLE_USER' role.
    *
-   * @param request the authentication request containing username and password
-   * @return the username of the newly registered user
+   * @param user The user entity to register.
+   * @return The newly registered user.
+   * @throws IllegalStateException if the default 'ROLE_USER' role is not found.
    */
   @Override
-  public String registerUser(final RegistrationRequestDto request) {
-    return userService.registerUser(request);
+  public User registerUser(final User user) {
+    Optional<Role> userRole = roleRepository.findByName("ROLE_USER");
+    if (userRole.isEmpty()) {
+      throw new IllegalStateException(
+          "Default role 'ROLE_USER' not found in the database."
+      );
+    }
+    user.setStatus(UserStatus.ACTIVE);
+    user.setRoles(Collections.singleton(userRole.get()));
+    return userAuthService.registerUser(user);
   }
 }

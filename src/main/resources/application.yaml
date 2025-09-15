@@ -8,12 +8,6 @@
 # ====================================================
 
 logging:
-  level:
-    org.springdoc: DEBUG
-    root: DEBUG              # set global logging to DEBUG
-    org.springframework: INFO # optional: keep Spring framework logs at INFO to reduce noise
-    com.yourpackage: DEBUG    # set your own package to DEBUG
-
 springdoc:
   api-docs:
     path: /v3/api-docs

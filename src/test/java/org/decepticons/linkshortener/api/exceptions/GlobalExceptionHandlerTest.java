@@ -1,11 +1,13 @@
 package org.decepticons.linkshortener.api.exceptions;
 
+import io.jsonwebtoken.JwtException;
 import org.decepticons.linkshortener.api.controller.GlobalExceptionHandlerController;
 import org.decepticons.linkshortener.api.exception.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -135,10 +137,8 @@ class GlobalExceptionHandlerTest {
    */
   @RestController
   private static class TestController {
-    @GetMapping("/test-user-exists")
-    public void testUserExists() {
-      throw new UserAlreadyExistsException("testuser");
-    }
+
+
     @GetMapping("/test-authentication-exception")
     public void testAuthenticationException() {
       throw new BadCredentialsException("Invalid username or password");

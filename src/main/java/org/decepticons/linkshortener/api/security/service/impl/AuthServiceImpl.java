@@ -3,7 +3,7 @@ package org.decepticons.linkshortener.api.security.service.impl;
 import java.util.Collections;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.decepticons.linkshortener.api.exceptions.InvalidTokenException;
+import org.decepticons.linkshortener.api.exception.InvalidTokenException;
 import org.decepticons.linkshortener.api.model.Role;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.model.UserStatus;

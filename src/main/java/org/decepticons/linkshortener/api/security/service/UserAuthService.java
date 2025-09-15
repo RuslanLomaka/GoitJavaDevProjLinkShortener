@@ -1,10 +1,10 @@
 package org.decepticons.linkshortener.api.security.service;
 
-import org.decepticons.linkshortener.api.dto.RegistrationRequestDto;
 import org.decepticons.linkshortener.api.model.User;
 
 /**
- * Service interface for user authentication and registration.
+ * Service interface for user-related authentication and data retrieval.
+ * This service works exclusively with the User domain object.
  */
 public interface UserAuthService {
 
@@ -17,10 +17,10 @@ public interface UserAuthService {
   User findByUsername(String username);
 
   /**
-   * Registers a new user with the provided authentication request.
+   * Registers a new user.
    *
-   * @param request the authentication request containing username and password
-   * @return the username of the newly registered user
+   * @param user the User domain object to register
+   * @return the registered User object
    */
-  String registerUser(RegistrationRequestDto request);
+  User registerUser(User user);
 }

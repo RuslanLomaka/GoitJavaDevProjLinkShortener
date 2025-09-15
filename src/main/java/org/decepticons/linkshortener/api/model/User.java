@@ -4,13 +4,19 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
@@ -69,6 +75,17 @@ public class User {
   @Column(name = "updated_at")
   private Instant updatedAt;
 
+  /**
+   * The set of roles assigned to this user.
+   */
+  @ManyToMany(fetch = FetchType.EAGER)
+  @JoinTable(
+      name = "users_roles",
+      joinColumns = @JoinColumn(name = "user_id"),
+      inverseJoinColumns = @JoinColumn(name = "role_id")
+  )
+  private Set<Role> roles = new HashSet<>();
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -101,5 +118,14 @@ public class User {
       throw new IllegalArgumentException("Username length must not exceed 64 characters");
     }
     this.username = username;
+  }
+
+  /**
+   * Sets the roles for this user.
+   *
+   * @param newRoles the set of roles to assign to this user.
+   */
+  public void setRoles(final Set<Role> newRoles) {
+    this.roles = newRoles;
   }
 }

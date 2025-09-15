@@ -1,38 +1,38 @@
 package org.decepticons.linkshortener.api.security.service;
 
-import org.decepticons.linkshortener.api.dto.AuthRequestDto;
-import org.decepticons.linkshortener.api.dto.AuthResponseDto;
-import org.decepticons.linkshortener.api.dto.RegistrationRequestDto;
+import org.decepticons.linkshortener.api.model.User;
 
 
 /**
  * Service interface for authentication and user registration.
- * Provides methods to login, refresh JWT tokens, and register new users.
+ * Provides methods to log in, refresh JWT tokens, and register new users.
+ * The methods are designed to work with core domain objects to decouple
+ * the business logic from the API layer's DTOs.
  */
 public interface AuthService {
 
   /**
-   * Authenticates a user using the given login request and
-   * returns an AuthResponseDto.
+   * Authenticates a user using the provided username and password.
    *
-   * @param loginRequest the login data (username and password)
-   * @return an AuthResponseDto containing JWT token and user details
+   * @param username the username for login
+   * @param password the password for login
+   * @return the authenticated User domain object
    */
-  AuthResponseDto login(AuthRequestDto loginRequest);
+  User login(String username, String password);
 
   /**
-   * Refreshes the JWT token if it is valid and not expired.
+   * Refreshes the JWT token if the provided token is valid.
    *
    * @param token the JWT token to refresh
-   * @return an AuthResponseDto with a new JWT token
+   * @return the User domain object associated with the token
    */
-  AuthResponseDto refreshToken(String token);
+  User refreshToken(String token);
 
   /**
-   * Registers a new user based on the given registration request.
+   * Registers a new user based on the given domain User object.
    *
-   * @param request the registration data (username and password)
-   * @return the username of the newly registered user
+   * @param user the domain User object to register
+   * @return the newly registered User domain object
    */
-  String registerUser(RegistrationRequestDto request);
+  User registerUser(User user);
 }

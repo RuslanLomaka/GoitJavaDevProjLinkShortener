@@ -31,7 +31,7 @@ class RedirectControllerTest {
   void verifyRedirectToOriginalUrl_SUCCESS() throws IOException {
     String code = "abc123";
     User owner = new User();
-    owner.setId(java.util.UUID.randomUUID());
+//    owner.setId(java.util.UUID.randomUUID());
 
     LinkResponseDto responseDto = new LinkResponseDto(
         java.util.UUID.randomUUID(),
@@ -61,7 +61,7 @@ class RedirectControllerTest {
   void verifyExceptionThrownWhenLinkNotValid_SUCCESS() throws IOException {
     String code = "abc123";
     User owner = new User();
-    owner.setId(java.util.UUID.randomUUID());
+//    owner.setId(java.util.UUID.randomUUID());
 
     LinkResponseDto responseDto = new LinkResponseDto(
         java.util.UUID.randomUUID(),

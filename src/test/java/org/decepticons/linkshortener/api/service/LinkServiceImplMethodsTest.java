@@ -54,7 +54,7 @@ public class LinkServiceImplMethodsTest {
 
 
     User testUser = new User();
-    testUser.setId(testUserId);
+//    testUser.setId(testUserId);
     testUser.setUsername(testUsername);
   }
 
@@ -108,7 +108,7 @@ public class LinkServiceImplMethodsTest {
   void deleteLink_SUCCESS() {
     UUID linkId = UUID.randomUUID();
     User owner = new User();
-    owner.setId(testUserId);
+//    owner.setId(testUserId);
     owner.setUsername(testUsername);
     Link link = new Link();
     link.setCode("abc123");

@@ -56,7 +56,7 @@ public class UserServiceImplTest {
   @DisplayName("Test getCurrentUser returns correct User")
   void testGetCurrentUser_Success() {
     User fakeUser = new User();
-    fakeUser.setId(UUID.randomUUID());
+//    fakeUser.setId(UUID.randomUUID());
     fakeUser.setUsername("testuser");
 
     when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(fakeUser));
@@ -72,7 +72,7 @@ public class UserServiceImplTest {
   void testGetCurrentUserId_Success() {
     UUID fakeId = UUID.randomUUID();
     User fakeUser = new User();
-    fakeUser.setId(fakeId);
+//    fakeUser.setId(fakeId);
     fakeUser.setUsername("testuser");
 
     when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(fakeUser));

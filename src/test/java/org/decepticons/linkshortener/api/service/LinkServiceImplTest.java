@@ -52,7 +52,7 @@ class LinkServiceImplTest {
   void testLinkCreation_Success() {
     UrlRequestDto urlRequestDto = new UrlRequestDto();
     User user = new User();
-    user.setId(UUID.randomUUID());
+//    user.setId(UUID.randomUUID());
 
 
     urlRequestDto.setUrl("https://www.example.com");
@@ -98,7 +98,7 @@ class LinkServiceImplTest {
   void testMapToResponse_Success() {
     UUID userId = UUID.randomUUID();
     User owner = new User();
-    owner.setId(userId);
+//    owner.setId(userId);
 
     Link link = new Link();
     link.setCode("abc123");
@@ -125,7 +125,7 @@ class LinkServiceImplTest {
   void getLinkByCode_Success() {
 
     User owner = new User();
-    owner.setId(UUID.randomUUID());
+//    owner.setId(UUID.randomUUID());
 
     Link link = new Link();
     link.setOwner(owner);
@@ -205,7 +205,7 @@ class LinkServiceImplTest {
     String code = "abc123";
     User owner = new User();
     owner.setUsername("testUser");
-    owner.setId(UUID.randomUUID());
+//    owner.setId(UUID.randomUUID());
 
     Link link = new Link();
     link.setCode(code);

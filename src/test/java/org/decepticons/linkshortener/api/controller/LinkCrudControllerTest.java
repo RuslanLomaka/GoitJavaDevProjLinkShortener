@@ -64,7 +64,7 @@ class LinkCrudControllerTest {
     urlRequestDto.setUrl("https://example.com/some/long/url");
 
     User fakeUser = new User();
-    fakeUser.setId(UUID.randomUUID());
+//    fakeUser.setId(UUID.randomUUID());
     fakeUser.setUsername("someName");
 
 

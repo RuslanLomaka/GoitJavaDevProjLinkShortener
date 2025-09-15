@@ -52,7 +52,7 @@ public class User {
 
   @Id
   @GeneratedValue
-  @Setter
+//  @Setter
   @Column(name = "id", nullable = false, updatable = false)
   private UUID id;
 

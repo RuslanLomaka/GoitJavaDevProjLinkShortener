@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("Global Exception Handler Tests")
 class GlobalExceptionHandlerTest {
 
-  private MockMvc mockMvc;
+    private MockMvc mockMvc;
 
   @BeforeEach
   void setup() {
@@ -139,6 +139,21 @@ class GlobalExceptionHandlerTest {
     public void testUserExists() {
       throw new UserAlreadyExistsException("testuser");
     }
+    @GetMapping("/test-authentication-exception")
+    public void testAuthenticationException() {
+      throw new BadCredentialsException("Invalid username or password");
+    }
+
+    @GetMapping("/test-jwt-exception")
+    public void testJwtException() {
+      throw new JwtException("JWT expired");
+    }
+
+    @GetMapping("/test-user-exists")
+    public void testUserExists() {
+      throw new UserAlreadyExistsException("testuser");
+    }
+
 
     @GetMapping("/test-user-not-found")
     public void testUserNotFound() {

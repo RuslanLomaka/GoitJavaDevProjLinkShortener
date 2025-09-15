@@ -2,10 +2,9 @@ package org.decepticons.linkshortener.api.security.service.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.decepticons.linkshortener.api.dto.RegistrationRequestDto;
-import org.decepticons.linkshortener.api.exception.InvalidPasswordException;
-import org.decepticons.linkshortener.api.exception.UserAlreadyExistsException;
-import org.decepticons.linkshortener.api.exception.UserNotFoundException;
+import org.decepticons.linkshortener.api.exceptions.InvalidPasswordException;
+import org.decepticons.linkshortener.api.exceptions.UserAlreadyExistsException;
+import org.decepticons.linkshortener.api.exceptions.UserNotFoundException;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.decepticons.linkshortener.api.security.service.UserAuthService;
@@ -29,34 +28,32 @@ public class UserAuthServiceImpl implements UserAuthService {
   private final PasswordEncoder passwordEncoder;
 
   /**
-   * Registers a new user with the given username and password.
+   * Registers a new user.
    * Throws an exception if the username already exists.
    *
-   * @param request the authentication request containing username and password
-   * @return the username of the newly registered user
+   * @param newUser the User domain object to be registered
+   * @return the newly registered User object
    */
   @Override
   @Transactional
-  public String registerUser(final RegistrationRequestDto request) {
-    String username = request.getUsername();
+  public User registerUser(final User newUser) {
+    String username = newUser.getUsername();
+    String password = newUser.getPasswordHash();
 
     if (userRepository.existsByUsername(username)) {
       throw new UserAlreadyExistsException(username);
     }
 
-    if (!PasswordValidator.isValid(request.getPassword())) {
+    if (!PasswordValidator.isValid(password)) {
       throw new InvalidPasswordException(
           "Password does not meet complexity requirements"
       );
     }
 
-    User newUser = new User();
-    newUser.setUsername(username);
-    newUser.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-
+    newUser.setPasswordHash(passwordEncoder.encode(password));
     userRepository.save(newUser);
 
-    return newUser.getUsername();
+    return newUser;
   }
 
   /**

@@ -1,9 +1,8 @@
 package org.decepticons.linkshortener.api.security.service.impl;
 
-import org.decepticons.linkshortener.api.dto.RegistrationRequestDto;
-import org.decepticons.linkshortener.api.exception.InvalidPasswordException;
-import org.decepticons.linkshortener.api.exception.UserAlreadyExistsException;
-import org.decepticons.linkshortener.api.exception.UserNotFoundException;
+import org.decepticons.linkshortener.api.exceptions.InvalidPasswordException;
+import org.decepticons.linkshortener.api.exceptions.UserAlreadyExistsException;
+import org.decepticons.linkshortener.api.exceptions.UserNotFoundException;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,9 +38,8 @@ class UserAuthServiceImplTest {
   @InjectMocks
   private UserAuthServiceImpl userAuthService;
 
-  private RegistrationRequestDto validRegistrationDto;
-  private RegistrationRequestDto invalidPasswordRegistrationDto;
-  private User testUser;
+  private User validUser;
+  private User invalidPasswordUser;
   private String rawPassword;
   private String invalidPassword;
 
@@ -50,34 +48,29 @@ class UserAuthServiceImplTest {
     rawPassword = "Password123";
     invalidPassword = "short";
 
-    validRegistrationDto = new RegistrationRequestDto();
-    validRegistrationDto.setUsername("testuser");
-    validRegistrationDto.setPassword(rawPassword);
+    validUser = new User();
+    validUser.setUsername("testuser");
+    validUser.setPasswordHash(rawPassword);
 
-    invalidPasswordRegistrationDto = new RegistrationRequestDto();
-    invalidPasswordRegistrationDto.setUsername("invalidpassworduser");
-    invalidPasswordRegistrationDto.setPassword(invalidPassword);
-
-    testUser = new User();
-    testUser.setUsername("testuser");
-    testUser.setPasswordHash("encodedPassword");
+    invalidPasswordUser = new User();
+    invalidPasswordUser.setUsername("invalidpassworduser");
+    invalidPasswordUser.setPasswordHash(invalidPassword);
   }
 
   @Test
-  @DisplayName("given a new user, when registering, then save the user successfully")
+  @DisplayName("given a new user, when registering, then saves the user successfully")
   void givenNewUser_whenRegistering_thenSavesUserSuccessfully() {
     // Given
     when(userRepository.existsByUsername(anyString())).thenReturn(false);
-    when(passwordEncoder.encode(rawPassword)).thenReturn("encodedPassword");
-    when(userRepository.save(any(User.class))).thenReturn(testUser);
+    when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
+    when(userRepository.save(any(User.class))).thenReturn(validUser);
 
     // When
-    String actualResult = userAuthService.registerUser(validRegistrationDto);
+    User actualUser = userAuthService.registerUser(validUser);
 
     // Then
-    String expectedResult = "testuser";
-    assertNotNull(actualResult);
-    assertEquals(expectedResult, actualResult);
+    assertNotNull(actualUser);
+    assertEquals("testuser", actualUser.getUsername());
     verify(userRepository).existsByUsername("testuser");
     verify(passwordEncoder).encode(rawPassword);
     verify(userRepository).save(any(User.class));
@@ -90,7 +83,7 @@ class UserAuthServiceImplTest {
     when(userRepository.existsByUsername(anyString())).thenReturn(true);
 
     // When & Then
-    assertThrows(UserAlreadyExistsException.class, () -> userAuthService.registerUser(validRegistrationDto));
+    assertThrows(UserAlreadyExistsException.class, () -> userAuthService.registerUser(validUser));
     verify(userRepository, never()).save(any(User.class));
   }
 
@@ -101,7 +94,7 @@ class UserAuthServiceImplTest {
     when(userRepository.existsByUsername(anyString())).thenReturn(false);
 
     // When & Then
-    assertThrows(InvalidPasswordException.class, () -> userAuthService.registerUser(invalidPasswordRegistrationDto));
+    assertThrows(InvalidPasswordException.class, () -> userAuthService.registerUser(invalidPasswordUser));
     verify(userRepository, never()).save(any(User.class));
   }
 
@@ -109,7 +102,7 @@ class UserAuthServiceImplTest {
   @DisplayName("given an existing username, when finding by username, then returns the user")
   void givenExistingUsername_whenFindingByUsername_thenReturnsUser() {
     // Given
-    when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+    when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(validUser));
 
     // When
     User actualUser = userAuthService.findByUsername("testuser");

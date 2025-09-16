@@ -224,5 +224,25 @@ public class GlobalExceptionHandlerController {
     );
   }
 
+  /**
+   * Handles exceptions for bad login credentials.
+   *
+   * @param ex The BadCredentialsException instance.
+   * @return A ResponseEntity with an UNAUTHORIZED status.
+   */
+  @ExceptionHandler(
+          org.springframework.security.authentication
+                  .BadCredentialsException.class
+  )
+  public ResponseEntity<Map<String, Object>> handleBadCredentials(
+          final org.springframework.security.authentication
+                  .BadCredentialsException ex
+  ) {
+    return buildErrorResponseSecurity(
+            HttpStatus.UNAUTHORIZED,
+            "Invalid Credentials",
+            ex.getMessage());
+  }
+
 
 }

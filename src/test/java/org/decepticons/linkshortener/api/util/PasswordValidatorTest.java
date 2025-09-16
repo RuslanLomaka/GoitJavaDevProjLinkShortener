@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-
 /**
  * Unit tests for the PasswordValidator class.
  * These tests ensure that the password complexity rules are correctly enforced.

@@ -15,7 +15,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 @SpringBootTest
 
 @AutoConfigureMockMvc(addFilters = false)
-class LinkShortenerApplicationTests {//dummy comment
+class LinkShortenerApplicationTests {
 
   @Autowired ApplicationContext context;
   @MockitoBean

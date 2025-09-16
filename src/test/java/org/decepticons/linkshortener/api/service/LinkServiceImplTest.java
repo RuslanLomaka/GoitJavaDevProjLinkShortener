@@ -33,7 +33,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
-
 @ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
 class LinkServiceImplTest {
 
@@ -131,7 +130,6 @@ class LinkServiceImplTest {
     assertEquals(LinkStatus.ACTIVE.name(), result.status());
   }
 
-
   @Test
   @DisplayName("Deactivate Link - Success")
   void deactivateLinkSuccess() {
@@ -157,7 +155,6 @@ class LinkServiceImplTest {
     LinkResponseDto result = linkServiceImpl.deactivateLink(linkResponseDto);
     assertEquals("INACTIVE", result.status());
   }
-
 
   @Test
   @DisplayName("Validate Link - Success")

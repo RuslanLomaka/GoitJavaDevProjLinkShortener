@@ -56,7 +56,6 @@ public class LinkServiceImplMethodsTest {
         new UsernamePasswordAuthenticationToken(testUsername, null, List.of());
     SecurityContextHolder.getContext().setAuthentication(auth);
 
-
     User testUser = new User();
     testUser.setUsername(testUsername);
   }

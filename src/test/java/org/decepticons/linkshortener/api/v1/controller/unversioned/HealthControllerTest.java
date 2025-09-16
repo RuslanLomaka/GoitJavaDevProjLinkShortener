@@ -14,7 +14,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-
 @WebMvcTest(controllers = HealthController.class)
 @AutoConfigureMockMvc(addFilters = false) // disable Spring Security filters
 class HealthControllerTest {

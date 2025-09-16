@@ -14,7 +14,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 
-
 @DisplayName("AuthMapper Unit Tests")
 class AuthMapperTest {
 

@@ -1,6 +1,5 @@
 package org.decepticons.linkshortener.api.exceptions;
 
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -143,7 +142,6 @@ class GlobalExceptionHandlerTest {
   @RestController
   private static class TestController {
 
-
     @GetMapping("/test-authentication-exception")
     public void testAuthenticationException() {
       throw new BadCredentialsException("Invalid username or password");
@@ -158,7 +156,6 @@ class GlobalExceptionHandlerTest {
     public void testUserExists() {
       throw new UserAlreadyExistsException("testuser");
     }
-
 
     @GetMapping("/test-user-not-found")
     public void testUserNotFound() {

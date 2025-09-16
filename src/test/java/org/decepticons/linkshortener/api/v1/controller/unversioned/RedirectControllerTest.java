@@ -1,6 +1,5 @@
 package org.decepticons.linkshortener.api.v1.controller.unversioned;
 
-
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
@@ -20,7 +19,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-
 @ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
 class RedirectControllerTest {
 
@@ -35,7 +33,6 @@ class RedirectControllerTest {
   void verifyRedirectToOriginalUrlSuccess() throws IOException {
     String code = "abc123";
     User owner = new User();
-
 
     LinkResponseDto responseDto = new LinkResponseDto(
         java.util.UUID.randomUUID(),

@@ -1,6 +1,5 @@
 package org.decepticons.linkshortener.api.v1.controller;
 
-
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;

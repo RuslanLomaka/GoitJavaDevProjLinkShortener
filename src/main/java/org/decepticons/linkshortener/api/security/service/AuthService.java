@@ -2,7 +2,6 @@ package org.decepticons.linkshortener.api.security.service;
 
 import org.decepticons.linkshortener.api.model.User;
 
-
 /**
  * Service interface for authentication and user registration.
  * Provides methods to log in, refresh JWT tokens, and register new users.

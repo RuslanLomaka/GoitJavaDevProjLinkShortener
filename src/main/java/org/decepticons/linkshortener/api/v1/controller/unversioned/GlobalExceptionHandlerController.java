@@ -15,14 +15,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-
-
 /**
  * Global exception handler for managing application-wide exceptions.
  */
 @ControllerAdvice
 public class GlobalExceptionHandlerController {
-
 
   /**
    * Builds a standardized error response.
@@ -56,7 +53,6 @@ public class GlobalExceptionHandlerController {
    * @return A ResponseEntity containing the error details.
    */
 
-
   private ResponseEntity<Map<String, Object>> buildErrorResponseSecurity(
       final HttpStatus status,
       final String error,
@@ -68,7 +64,6 @@ public class GlobalExceptionHandlerController {
         "message", message
     ));
   }
-
 
   /**
    * Handles exceptions when a user already exists.
@@ -157,7 +152,6 @@ public class GlobalExceptionHandlerController {
         ex.getMessage());
   }
 
-
   /**
    * Handles exceptions when no such user is found in the system.
    *
@@ -243,6 +237,5 @@ public class GlobalExceptionHandlerController {
             "Invalid Credentials",
             ex.getMessage());
   }
-
 
 }

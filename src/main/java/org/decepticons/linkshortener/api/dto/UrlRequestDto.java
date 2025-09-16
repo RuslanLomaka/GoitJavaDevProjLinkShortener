@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
 
-
 /**
  * Data Transfer Object for receiving a URL from the client.
  * This object is used when creating a new short link.

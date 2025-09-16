@@ -1,7 +1,5 @@
 package org.decepticons.linkshortener.api.exception;
 
-import org.decepticons.linkshortener.api.exception.BaseException;
-
 /**
  * Thrown when a password does not meet complexity requirements.
  */

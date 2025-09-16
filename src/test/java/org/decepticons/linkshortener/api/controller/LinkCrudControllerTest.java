@@ -1,6 +1,5 @@
 package org.decepticons.linkshortener.api.controller;
 
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -36,8 +35,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Short Link Creation Tests")
 class LinkCrudControllerTest {
@@ -48,10 +45,8 @@ class LinkCrudControllerTest {
   @Mock
   UserServiceImpl userServiceImpl;
 
-
   @InjectMocks
   private LinkCrudController linkController;
-
 
   @BeforeEach
   void setUp() {
@@ -71,7 +66,6 @@ class LinkCrudControllerTest {
     User fakeUser = new User();
     fakeUser.setUsername("someName");
 
-
     LinkResponseDto fakeResponse = new LinkResponseDto(
         UUID.randomUUID(),
         "abc123",
@@ -83,45 +77,28 @@ class LinkCrudControllerTest {
         fakeUser.getId()
     );
 
-
     when(linkService.createLink(urlRequestDto)).thenReturn(fakeResponse);
-
-
     ResponseEntity<LinkResponseDto> response = linkController.createLink(urlRequestDto);
-
-
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
     assertEquals("abc123", response.getBody().code());
     assertEquals("https://example.com/some/long/url", response.getBody().originalUrl());
-
-
-
     verify(linkService).createLink(urlRequestDto);
-
   }
-
 
   @Test
   @DisplayName("Create Short Link - User Not Found")
   void testCreateShortLinkUserNotFoundController() {
     UrlRequestDto urlRequestDto = new UrlRequestDto();
     urlRequestDto.setUrl("https://example.com/some/long/url");
-
-
     when(linkService.createLink(Mockito.any(UrlRequestDto.class)))
         .thenThrow(new NoSuchUserFoundInTheSystemException("User not found", "some-user-id"));
-
     NoSuchUserFoundInTheSystemException ex = assertThrows(
         NoSuchUserFoundInTheSystemException.class,
         () -> linkController.createLink(urlRequestDto)
     );
-
     assertEquals("User not found", ex.getMessage());
-
     verify(linkService).createLink(urlRequestDto);
   }
-
-
 
   @Test
   @DisplayName("Get All My Links - Success")
@@ -161,10 +138,7 @@ class LinkCrudControllerTest {
     assertEquals(2, response.getBody().getContent().size());
     assertEquals("code1", response.getBody().getContent().get(0).code());
     assertEquals("code2", response.getBody().getContent().get(1).code());
-
-
     verify(linkService, times(1)).getAllMyLinks(page, size);
-
   }
 
   @Test
@@ -172,8 +146,6 @@ class LinkCrudControllerTest {
   void getAllMyActiveLinksSuccess() {
     int page = 0;
     int size = 10;
-
-
     LinkResponseDto link1 = new LinkResponseDto(
         UUID.randomUUID(),
         "code1",
@@ -197,24 +169,14 @@ class LinkCrudControllerTest {
     );
 
     Page<LinkResponseDto> mockPage = new PageImpl<>(List.of(link1, link2));
-
-
     when(linkService.getAllMyActiveLinks(page, size)).thenReturn(mockPage);
-
-
     ResponseEntity<Page<LinkResponseDto>> response = linkController.getAllMyActiveLinks(page, size);
-
-
     assertNotNull(response.getBody());
     assertEquals(2, response.getBody().getContent().size());
     assertEquals("code1", response.getBody().getContent().get(0).code());
     assertEquals("code2", response.getBody().getContent().get(1).code());
-
-
     verify(linkService, times(1)).getAllMyActiveLinks(page, size);
   }
-
-
 
   @Test
   @DisplayName("Delete Link - Success")
@@ -222,29 +184,20 @@ class LinkCrudControllerTest {
 
     UUID linkId = UUID.randomUUID();
     String mockCode = "abc123";
-
     ResponseEntity<Void> mockResponse = ResponseEntity.noContent().build();
-
     when(linkService.deleteLink(linkId)).thenReturn(mockCode);
-
     ResponseEntity<Void> response = linkController.deleteLink(linkId);
-
     assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
     assertNull(response.getBody());
-
     verify(linkService, times(1)).deleteLink(linkId);
   }
 
   @Test
   @DisplayName("Update Link Expiration Date - Success")
   void testUpdateLinkExpirationDate() {
-
     String code = "abc123";
-
     UpdateLinkExpirationRequestDto requestDto
         = new UpdateLinkExpirationRequestDto(Instant.now().plus(5, ChronoUnit.DAYS));
-
-
     when(linkService.updateLinkExpiration(code, requestDto.getNewExpirationDate()))
         .thenReturn(new LinkResponseDto(
             UUID.randomUUID(),
@@ -256,10 +209,8 @@ class LinkCrudControllerTest {
             "ACTIVE",
             UUID.randomUUID()
         ));
-
     ResponseEntity<LinkResponseDto> response =
         linkController.updateLinkExpiration(requestDto, code);
-
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertEquals(code, response.getBody().code());

@@ -7,8 +7,6 @@ import org.decepticons.linkshortener.api.model.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-
-
 /**
  * Adapter class to wrap our domain User into Spring Security's UserDetails.
  */

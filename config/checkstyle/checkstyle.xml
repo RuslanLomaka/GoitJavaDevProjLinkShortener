@@ -313,7 +313,6 @@
             <property name="lineWrappingIndentation" value="4"/>
             <property name="arrayInitIndent" value="2"/>
         </module>
-
         <module name="AbbreviationAsWordInName">
             <property name="ignoreFinal" value="false"/>
             <property name="allowedAbbreviationLength" value="0"/>
@@ -461,5 +460,11 @@
             <!-- The check is suppressed in the next line of code after the comment -->
             <property name="influenceFormat" value="1"/>
         </module>
+    </module>
+    <!-- Forbid more than 1 consecutive blank line -->
+    <module name="RegexpMultiline">
+        <!-- (?m) enables multiline mode. This matches 3+ newlines in a row. -->
+        <property name="format" value="(?m)(^\s*$\r?\n){2,}"/>
+        <property name="message" value="Only one blank line is allowed."/>
     </module>
 </module>

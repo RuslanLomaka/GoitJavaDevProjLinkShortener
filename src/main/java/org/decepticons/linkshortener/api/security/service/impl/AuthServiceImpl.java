@@ -60,7 +60,6 @@ public class AuthServiceImpl implements AuthService {
    */
   private final RoleRepository roleRepository;
 
-
   /**
    * Authenticates a user with the provided username and password.
    *

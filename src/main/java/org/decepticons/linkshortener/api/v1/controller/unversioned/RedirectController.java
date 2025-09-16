@@ -1,6 +1,5 @@
 package org.decepticons.linkshortener.api.v1.controller.unversioned;
 
-
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import org.decepticons.linkshortener.api.dto.LinkResponseDto;
@@ -12,7 +11,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
 /**
  * REST controller for redirecting short links.
  * Provides an endpoint to redirect to the original URL based on the short code.
@@ -23,7 +21,6 @@ public class RedirectController {
 
   private final LinkServiceImpl linkServiceImpl;
 
-
   /**
    * Constructs a new {@link RedirectController} with the given dependencies.
    *
@@ -33,7 +30,6 @@ public class RedirectController {
     this.linkServiceImpl = linkServiceImpl;
   }
 
-
   /**
    * Redirects to the original URL by the given short code.
    *
@@ -41,7 +37,6 @@ public class RedirectController {
    */
   @GetMapping("/{code}")
   public void redirect(@PathVariable String code, HttpServletResponse response) throws IOException {
-
 
     LinkResponseDto linkByCode = linkServiceImpl.getLinkByCode(code);
 

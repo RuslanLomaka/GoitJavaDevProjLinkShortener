@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-
 /**
  * Utility class for generating and validating JWT tokens.
  * Provides methods to create JWT tokens for authenticated users,

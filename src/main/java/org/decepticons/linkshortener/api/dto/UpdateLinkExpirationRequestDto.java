@@ -20,5 +20,4 @@ public class UpdateLinkExpirationRequestDto {
   @NonNull
   private Instant newExpirationDate;
 
-
 }

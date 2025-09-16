@@ -55,14 +55,12 @@ public interface LinkRepository extends JpaRepository<Link, UUID> {
    */
   Page<Link> findAllByOwnerIdAndStatus(UUID ownerId, LinkStatus status, Pageable pageable);
 
-
-  /**
-   * Increments the click count and updates the last accessed timestamp for a link
+  /** Increments the click count and updates the last accessed timestamp for a link
    * identified by its short code using a native SQL query.
-   *
-   * @param code the short code of the link to update
-   * @return the number of rows affected (should be 1 if the link exists, 0 otherwise)
+   *@param code the short code of the link to update
+    @return the number of rows affected (should be 1 if the link exists, 0 otherwise)
    */
+
   @Modifying(clearAutomatically = true, flushAutomatically = true)
   @Query(value = """
       UPDATE links

@@ -8,7 +8,6 @@ import org.decepticons.linkshortener.api.service.UserService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-
 /**
  * Service implementation for retrieving information about the currently authenticated user.
  */

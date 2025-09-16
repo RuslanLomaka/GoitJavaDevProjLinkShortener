@@ -6,7 +6,6 @@ import org.decepticons.linkshortener.api.dto.LinkResponseDto;
 import org.decepticons.linkshortener.api.dto.UrlRequestDto;
 import org.springframework.data.domain.Page;
 
-
 /**
  * Service interface for managing links in the link shortener application.
  * Provides methods for creating, retrieving, updating, and deleting links,

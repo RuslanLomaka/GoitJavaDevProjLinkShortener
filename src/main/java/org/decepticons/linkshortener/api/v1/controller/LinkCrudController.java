@@ -20,9 +20,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-
-
-
 /**
  * REST controller for managing short links.
  * Provides endpoints for creating, retrieving, and deleting short links.
@@ -35,7 +32,6 @@ public class LinkCrudController {
 
   private final LinkService linkService;
 
-
   /**
    * Constructs a new {@link LinkCrudController} with the given dependencies.
    *
@@ -43,8 +39,6 @@ public class LinkCrudController {
    */
   public LinkCrudController(LinkService linkService) {
     this.linkService = linkService;
-
-
   }
 
   /**
@@ -56,10 +50,7 @@ public class LinkCrudController {
   @PostMapping
   @Operation(summary = "Create a short URL for the current user")
   public ResponseEntity<LinkResponseDto> createLink(@Valid @RequestBody UrlRequestDto originalUrl) {
-
-
     LinkResponseDto link = linkService.createLink(originalUrl);
-
     return ResponseEntity.status(201).body(link);
   }
 
@@ -108,8 +99,6 @@ public class LinkCrudController {
     return ResponseEntity.noContent().build();
   }
 
-
-
   /**
    * Updates the expiration date of a specific link identified by its code.
    *
@@ -126,6 +115,5 @@ public class LinkCrudController {
     return ResponseEntity
         .ok(linkService.updateLinkExpiration(code, newExpirationDate.getNewExpirationDate()));
   }
-
 
 }

@@ -31,7 +31,6 @@ import org.springframework.transaction.annotation.Transactional;
  * </p>
  */
 
-
 @Service
 public class LinkServiceImpl implements LinkService {
 
@@ -41,7 +40,6 @@ public class LinkServiceImpl implements LinkService {
   private final LinkRepository linkRepository;
   private final UserServiceImpl userServiceImpl;
   private final Random random = new Random();
-
 
   /**
    * Creates a new {@code LinkService}.
@@ -54,7 +52,6 @@ public class LinkServiceImpl implements LinkService {
     this.linkRepository = linkRepository;
     this.userServiceImpl = userServiceImpl;
   }
-
 
   /**
    * Creates and persists a new {@link Link}.
@@ -77,7 +74,6 @@ public class LinkServiceImpl implements LinkService {
 
     return mapToResponse(saved);
   }
-
 
   /**
    * Increments the click counter of the given link and persists the change.
@@ -108,7 +104,6 @@ public class LinkServiceImpl implements LinkService {
     return mapToResponse(updatedLink);
   }
 
-
   /**
    * Maps a {@link Link} JPA entity to a transport-friendly {@link LinkResponseDto}.
    *
@@ -129,7 +124,6 @@ public class LinkServiceImpl implements LinkService {
     );
   }
 
-
   /**
    * Generates a pseudo-random short code of fixed length .
    *
@@ -143,7 +137,6 @@ public class LinkServiceImpl implements LinkService {
     }
     return sb.toString();
   }
-
 
   /**
    * Retrieves a {@link Link} entity by its short code.
@@ -163,7 +156,6 @@ public class LinkServiceImpl implements LinkService {
     return mapToResponse(link);
 
   }
-
 
   /**
    * Deactivates a link by setting its status to INACTIVE.
@@ -185,7 +177,6 @@ public class LinkServiceImpl implements LinkService {
     return mapToResponse(saved);
   }
 
-
   /**
    * Validates if a link is active and not expired.
    *
@@ -197,7 +188,6 @@ public class LinkServiceImpl implements LinkService {
     return link.status().equalsIgnoreCase(LinkStatus.ACTIVE.toString())
         && (link.expiresAt() == null || link.expiresAt().isAfter(Instant.now()));
   }
-
 
   /**
    * Retrieves all links of the currently authenticated user with pagination.
@@ -260,9 +250,6 @@ public class LinkServiceImpl implements LinkService {
    *
    * @return the UUID of the authenticated user
    */
-
-
-
 
   @CachePut(value = "shortLinksCache", key = "#code")
   @Override

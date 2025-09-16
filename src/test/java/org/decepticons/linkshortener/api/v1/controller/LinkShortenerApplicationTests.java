@@ -18,7 +18,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 class LinkShortenerApplicationTests {
 
   @Autowired ApplicationContext context;
-
   @MockitoBean
   JwtAuthenticationFilter jwtFilter;
   @MockitoBean

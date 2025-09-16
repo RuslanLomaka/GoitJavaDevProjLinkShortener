@@ -48,15 +48,11 @@ class RedirectControllerTest {
         owner.getId()
     );
 
-
     when(linkServiceImpl.getLinkByCode(code)).thenReturn(responseDto);
     when(linkServiceImpl.incrementClicks(responseDto)).thenReturn(responseDto);
     when(linkServiceImpl.validateLink(responseDto)).thenReturn(true);
     doNothing().when(httpServletResponse).sendRedirect(responseDto.originalUrl());
-
-
     redirectController.redirect(code, httpServletResponse);
-
     verify(httpServletResponse, times(1)).sendRedirect("https://www.example.com");
     verify(linkServiceImpl, times(1)).incrementClicks(responseDto);
   }
@@ -65,7 +61,6 @@ class RedirectControllerTest {
   void verifyExceptionThrownWhenLinkNotValidSuccess() throws IOException {
     String code = "abc123";
     User owner = new User();
-
 
     LinkResponseDto responseDto = new LinkResponseDto(
         java.util.UUID.randomUUID(),
@@ -80,16 +75,13 @@ class RedirectControllerTest {
 
     when(linkServiceImpl.getLinkByCode(code)).thenReturn(responseDto);
     when(linkServiceImpl.validateLink(responseDto)).thenReturn(false);
-
     Exception ex = null;
-
 
     try {
       redirectController.redirect(code, httpServletResponse);
     } catch (Exception e) {
       ex = e;
     }
-
     verify(httpServletResponse, never()).sendRedirect("https://www.example.com");
     assertInstanceOf(ShortLinkIsOutOfDateException.class, ex);
   }

@@ -11,7 +11,6 @@ import org.decepticons.linkshortener.api.model.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-
 @DisplayName("CustomUserDetails Unit Tests")
 class CustomUserDetailsTest {
 

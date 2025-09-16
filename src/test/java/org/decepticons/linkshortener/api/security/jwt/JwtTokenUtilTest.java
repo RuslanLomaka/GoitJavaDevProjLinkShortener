@@ -17,8 +17,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.userdetails.UserDetails;
 
-
-
 /**
  * Unit tests for the JwtTokenUtil class.
  * These tests ensure the correct behavior of token creation, validation, and claim extraction.

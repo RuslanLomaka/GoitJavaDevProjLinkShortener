@@ -41,15 +41,11 @@ class AuthControllerTest {
 
   @Autowired
   private WebApplicationContext webApplicationContext;
-
   @Autowired
   private UserRepository userRepository;
-
   @Autowired
   private PasswordEncoder passwordEncoder;
-
   private final ObjectMapper objectMapper = new ObjectMapper();
-
   // Use a PostgreSQL container for the tests
   @Container
  public static PostgreSQLContainer<?> postgresContainer = new PostgreSQLContainer<>(

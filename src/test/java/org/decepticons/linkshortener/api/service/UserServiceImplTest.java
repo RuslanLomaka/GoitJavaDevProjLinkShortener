@@ -47,8 +47,6 @@ public class UserServiceImplTest {
   void setUp() {
     when(authentication.getName()).thenReturn("testuser");
     when(securityContext.getAuthentication()).thenReturn(authentication);
-
-
     org.springframework.security.core.context.SecurityContextHolder.setContext(securityContext);
   }
 
@@ -62,11 +60,8 @@ public class UserServiceImplTest {
   void testGetCurrentUserSuccess() {
     User fakeUser = new User();
     fakeUser.setUsername("testuser");
-
     when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(fakeUser));
-
     User result = userService.getCurrentUser();
-
     assertNotNull(result);
     assertEquals("testuser", result.getUsername());
   }
@@ -78,11 +73,8 @@ public class UserServiceImplTest {
     User fakeUser = new User();
     ReflectionTestUtils.setField(fakeUser, "id", fakeId);
     fakeUser.setUsername("testuser");
-
     when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(fakeUser));
-
     UUID result = userService.getCurrentUserId();
-
     assertEquals(fakeId, result);
   }
 
@@ -90,12 +82,10 @@ public class UserServiceImplTest {
   @DisplayName("Test getCurrentUser throws exception when user not found")
   void testGetCurrentUserUserNotFound() {
     when(userRepository.findByUsername("testuser")).thenReturn(Optional.empty());
-
     NoSuchUserFoundInTheSystemException ex = assertThrows(
         NoSuchUserFoundInTheSystemException.class,
         () -> userService.getCurrentUser()
     );
-
     assertTrue(ex.getMessage().contains("No such user found in the system"));
   }
 

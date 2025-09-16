@@ -21,7 +21,6 @@ class PasswordValidatorTest {
     String password1 = "Password123!";
     String password2 = "MySecureP@ssw0rd";
     String password3 = "Another_Long_Password_42";
-
     // When & Then
     assertTrue(PasswordValidator.isValid(password1));
     assertTrue(PasswordValidator.isValid(password2));
@@ -35,7 +34,6 @@ class PasswordValidatorTest {
     String password1 = "short";
     String password2 = "A1!";
     String password3 = "1";
-
     // When & Then
     assertFalse(PasswordValidator.isValid(password1));
     assertFalse(PasswordValidator.isValid(password2));

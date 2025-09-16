@@ -46,26 +46,16 @@ class LinkServiceImplTest {
   @InjectMocks
   private LinkServiceImpl linkServiceImpl;
 
-
-
-
-
-
-
   @Test
   @DisplayName("Link Creation - Success")
   void testLinkCreationSuccess() {
     UrlRequestDto urlRequestDto = new UrlRequestDto();
     User user = new User();
 
-
     urlRequestDto.setUrl("https://www.example.com");
-
     when(userServiceImpl.getCurrentUser()).thenReturn(user);
     when(linkRepository.save(any(Link.class))).thenAnswer(i -> i.getArguments()[0]);
-
     LinkResponseDto result = linkServiceImpl.createLink(urlRequestDto);
-
     assertEquals(urlRequestDto.getUrl(), result.originalUrl());
     assertEquals(user.getId(), result.ownerId());
     assertNotNull(result.code());
@@ -111,25 +101,20 @@ class LinkServiceImplTest {
     link.setStatus(LinkStatus.ACTIVE);
     link.setExpiresAt(Instant.now().plus(2, ChronoUnit.DAYS));
     link.setOwner(owner);
-
     LinkResponseDto dto = linkServiceImpl.mapToResponse(link);
-
     assertEquals(link.getCode(), dto.code());
     assertEquals(link.getOriginalUrl(), dto.originalUrl());
     assertEquals(link.getClicks(), dto.clicks());
     assertEquals(link.getStatus().name(), dto.status());
     assertEquals(owner.getId(), dto.ownerId());
     assertEquals(link.getExpiresAt(), dto.expiresAt());
-
     assertNull(dto.id());
   }
 
   @Test
   @DisplayName("Get Link By Code - Success")
   void getLinkByCodeSuccess() {
-
     User owner = new User();
-
     Link link = new Link();
     link.setOwner(owner);
     link.setCode("abc123");
@@ -137,18 +122,13 @@ class LinkServiceImplTest {
     link.setClicks(5);
     link.setStatus(LinkStatus.ACTIVE);
     link.setExpiresAt(Instant.now().plus(2, ChronoUnit.DAYS));
-
-
     when(linkRepository.findByCode("abc123")).thenReturn(Optional.of(link));
-
     LinkResponseDto result = linkServiceImpl.getLinkByCode("abc123");
-
     assertEquals("abc123", result.code());
     assertEquals("https://example.com", result.originalUrl());
     assertEquals(owner.getId(), result.ownerId());
     assertEquals(5, result.clicks());
     assertEquals(LinkStatus.ACTIVE.name(), result.status());
-
   }
 
 
@@ -157,12 +137,10 @@ class LinkServiceImplTest {
   void deactivateLinkSuccess() {
 
     User owner = new User();
-
     Link link = new Link();
     link.setOwner(owner);
     link.setCode("abc123");
     link.setStatus(LinkStatus.ACTIVE);
-
     LinkResponseDto linkResponseDto = new LinkResponseDto(
         UUID.randomUUID(),
         "abc123",
@@ -176,9 +154,7 @@ class LinkServiceImplTest {
 
     when(linkRepository.findByCode("abc123")).thenReturn(Optional.of(link));
     when(linkRepository.save(any(Link.class))).thenAnswer(i -> i.getArguments()[0]);
-
     LinkResponseDto result = linkServiceImpl.deactivateLink(linkResponseDto);
-
     assertEquals("INACTIVE", result.status());
   }
 

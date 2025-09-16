@@ -28,7 +28,6 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
-
 /**
  * Unit tests for the JwtAuthenticationFilter.
  * These tests focus on the filter's behavior when processing HTTP requests

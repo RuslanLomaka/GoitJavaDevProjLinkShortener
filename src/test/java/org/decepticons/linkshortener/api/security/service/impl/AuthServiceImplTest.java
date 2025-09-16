@@ -36,8 +36,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-
-
 /**
  * Unit tests for the AuthServiceImpl class.
  * These tests use Mockito to simulate dependencies and test the business logic in isolation.

@@ -113,8 +113,6 @@ class LinkCrudControllerTest {
 
     mockMvc.perform(delete("/api/v1/links/delete/{id}", existingId.toString()))
         .andExpect(status().isNoContent());
-
-
     verify(linkServiceImpl, times(1)).deleteLink(existingId);
   }
 

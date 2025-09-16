@@ -33,8 +33,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
-
-
 /** * Unit tests for the LinkServiceImpl class.
  * These tests focus on the link management logic using mocks for dependencies.
  */
@@ -46,10 +44,8 @@ public class LinkServiceImplMethodsTest {
   @Mock
   private UserServiceImpl userServiceImpl;
 
-
   @InjectMocks
   private LinkServiceImpl linkService;
-
   private final UUID testUserId = UUID.randomUUID();
   private final String testUsername = "testuser";
 
@@ -75,16 +71,11 @@ public class LinkServiceImplMethodsTest {
   void getAllMyLinksSuccess() {
     Link link1 = new Link();
     link1.setOwner(new User());
-
     Page<Link> mockPage = new PageImpl<>(List.of(link1));
-
-
     when(userServiceImpl.getCurrentUserId()).thenReturn(testUserId);
     when(linkRepository.findAllByOwnerId(eq(testUserId), any(Pageable.class)))
         .thenReturn(mockPage);
-
     Page<LinkResponseDto> result = linkService.getAllMyLinks(0, 10);
-
     assertNotNull(result);
     assertEquals(1, result.getContent().size());
     assertEquals(link1.getId(), result.getContent().get(0).id());
@@ -96,16 +87,12 @@ public class LinkServiceImplMethodsTest {
     Link link1 = new Link();
     link1.setStatus(LinkStatus.ACTIVE);
     link1.setOwner(new User());
-
     Page<Link> mockPage = new PageImpl<>(List.of(link1));
-
     when(userServiceImpl.getCurrentUserId()).thenReturn(testUserId);
     when(linkRepository.findAllByOwnerIdAndStatus(eq(testUserId),
         eq(LinkStatus.ACTIVE), any(Pageable.class)))
         .thenReturn(mockPage);
-
     Page<LinkResponseDto> result = linkService.getAllMyActiveLinks(0, 10);
-
     assertNotNull(result);
     assertEquals(1, result.getContent().size());
     assertEquals(LinkStatus.ACTIVE.toString(), result.getContent().get(0).status());
@@ -121,15 +108,10 @@ public class LinkServiceImplMethodsTest {
     link.setCode("abc123");
     link.setOwner(owner);
     UUID linkId = UUID.randomUUID();
-
     when(userServiceImpl.getCurrentUserId()).thenReturn(testUserId);
     when(linkRepository.findById(linkId)).thenReturn(Optional.of(link));
-
     linkService.deleteLink(linkId);
-
     verify(linkRepository, times(1)).delete(link);
   }
-
-
 
 }

@@ -33,4 +33,4 @@ void healthControllerIsLoaded() {
     assertThat(context.getBean(
             HealthController.class)).isNotNull();
   }
-}
+}//

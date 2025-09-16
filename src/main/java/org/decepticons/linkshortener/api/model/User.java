@@ -52,7 +52,6 @@ public class User {
 
   @Id
   @GeneratedValue
-//  @Setter
   @Column(name = "id", nullable = false, updatable = false)
   private UUID id;
 

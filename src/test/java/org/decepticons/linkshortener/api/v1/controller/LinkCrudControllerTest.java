@@ -1,9 +1,21 @@
 package org.decepticons.linkshortener.api.v1.controller;
 
+
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.time.Instant;
+import java.util.Collections;
+import java.util.UUID;
 import org.decepticons.linkshortener.api.dto.LinkResponseDto;
-import org.decepticons.linkshortener.api.service.LinkService;
+import org.decepticons.linkshortener.api.service.impl.LinkServiceImpl;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,17 +23,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.Instant;
-import java.util.Collections;
-import java.util.UUID;
-
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -31,7 +36,7 @@ class LinkCrudControllerTest {
   private MockMvc mockMvc;
 
   @MockitoBean
-  private LinkService linkService;
+  private LinkServiceImpl linkServiceImpl;
 
   @Test
   @WithMockUser(username = "testuser", roles = {"USER"})
@@ -53,7 +58,7 @@ class LinkCrudControllerTest {
         1
     );
 
-    Mockito.when(linkService.getAllMyLinks(anyInt(), anyInt())).thenReturn(page);
+    when(linkServiceImpl.getAllMyLinks(anyInt(), anyInt())).thenReturn(page);
 
     mockMvc.perform(get("/api/v1/links/my_all_links")
             .param("page", "0")
@@ -85,7 +90,7 @@ class LinkCrudControllerTest {
         1
     );
 
-    Mockito.when(linkService.getAllMyActiveLinks(anyInt(), anyInt())).thenReturn(page);
+    when(linkServiceImpl.getAllMyActiveLinks(anyInt(), anyInt())).thenReturn(page);
 
     mockMvc.perform(get("/api/v1/links/my_all_active_links")
             .param("page", "0")
@@ -100,12 +105,17 @@ class LinkCrudControllerTest {
   @Test
   @WithMockUser(username = "testuser", roles = {"USER"})
   void testDeleteLinkSuccess() throws Exception {
+    ResponseEntity<Void> responseEntity = ResponseEntity.noContent().build();
     UUID existingId = UUID.randomUUID();
-    Mockito.doNothing().when(linkService).deleteLink(existingId);
+
+    when(linkServiceImpl.deleteLink(existingId))
+        .thenReturn(existingId.toString());
 
     mockMvc.perform(delete("/api/v1/links/delete/{id}", existingId.toString()))
         .andExpect(status().isNoContent());
 
+
+    verify(linkServiceImpl, times(1)).deleteLink(existingId);
   }
 
 }

@@ -57,10 +57,11 @@ public class SecurityConfig {
                 "/api/v1/auth/login",
                 "/api/v1/auth/refresh",
 
-// Redirect endpoint
+                // Redirect endpoint
                 "/api/links/**",
 
-// Documentation & health endpoints
+                // Documentation & health endpoints
+                "/api/v1/cache",
                 "/health",
                 "/h2-console/**",
                 "/swagger-ui.html",

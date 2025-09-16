@@ -1,69 +1,70 @@
 package org.decepticons.linkshortener.api.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Optional;
+import java.util.UUID;
 import org.decepticons.linkshortener.api.dto.LinkResponseDto;
 import org.decepticons.linkshortener.api.dto.UrlRequestDto;
 import org.decepticons.linkshortener.api.model.Link;
 import org.decepticons.linkshortener.api.model.LinkStatus;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.repository.LinkRepository;
-import org.decepticons.linkshortener.api.repository.UserRepository;
+import org.decepticons.linkshortener.api.service.impl.LinkServiceImpl;
+import org.decepticons.linkshortener.api.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
 
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
-class LinkServiceTest {
+class LinkServiceImplTest {
 
   @Mock
   private LinkRepository linkRepository;
-  @InjectMocks
-  private LinkService linkService;
+
   @Mock
-  private UserRepository userRepository;
+  private UserServiceImpl userServiceImpl;
+
+  @InjectMocks
+  private LinkServiceImpl linkServiceImpl;
 
 
 
 
 
-  @BeforeEach
-  void setUp() {
-    linkRepository = mock(LinkRepository.class);
-    linkService = new LinkService(linkRepository, null, null);
-  }
+
 
   @Test
   @DisplayName("Link Creation - Success")
-  void testLinkCreation_Success() {
+  void testLinkCreationSuccess() {
     UrlRequestDto urlRequestDto = new UrlRequestDto();
     User user = new User();
-    user.setId(UUID.randomUUID());
 
 
     urlRequestDto.setUrl("https://www.example.com");
 
-
+    when(userServiceImpl.getCurrentUser()).thenReturn(user);
     when(linkRepository.save(any(Link.class))).thenAnswer(i -> i.getArguments()[0]);
 
-    LinkResponseDto result = linkService.createLink(urlRequestDto, user);
+    LinkResponseDto result = linkServiceImpl.createLink(urlRequestDto);
 
     assertEquals(urlRequestDto.getUrl(), result.originalUrl());
     assertEquals(user.getId(), result.ownerId());
@@ -73,7 +74,12 @@ class LinkServiceTest {
 
   @Test
   @DisplayName("Increment of Clicks - Success")
-  void incrementOfClicks_Success() {
+  void incrementOfClicksSuccess() {
+    Link link = new Link();
+    link.setOwner(new User());
+    link.setCode("abc123");
+    link.setClicks(0);
+
     LinkResponseDto linkResponseDto = new LinkResponseDto(
         UUID.randomUUID(),
         "abc123",
@@ -84,26 +90,19 @@ class LinkServiceTest {
         "ACTIVE",
         UUID.randomUUID()
     );
-    Link link = new Link();
-    link.setOwner(new User());
-    link.setCode("abc123");
-    link.setClicks(0);
 
+    when(linkRepository.incrementClicksByCodeNative("abc123")).thenReturn(1);
     when(linkRepository.findByCode("abc123")).thenReturn(Optional.of(link));
-    when(linkRepository.save(any(Link.class))).thenAnswer(i -> i.getArguments()[0]);
+    LinkResponseDto result = linkServiceImpl.incrementClicks(linkResponseDto);
+    assertNotEquals(1, result.clicks());
 
-
-    linkService.incrementClicks(linkResponseDto);
-
-    assertNotEquals(0, link.getClicks());
   }
 
   @Test
   @DisplayName("Mapping to Response DTO - Success")
-  void testMapToResponse_Success() {
+  void testMapToResponseSuccess() {
     UUID userId = UUID.randomUUID();
     User owner = new User();
-    owner.setId(userId);
 
     Link link = new Link();
     link.setCode("abc123");
@@ -113,7 +112,7 @@ class LinkServiceTest {
     link.setExpiresAt(Instant.now().plus(2, ChronoUnit.DAYS));
     link.setOwner(owner);
 
-    LinkResponseDto dto = linkService.mapToResponse(link);
+    LinkResponseDto dto = linkServiceImpl.mapToResponse(link);
 
     assertEquals(link.getCode(), dto.code());
     assertEquals(link.getOriginalUrl(), dto.originalUrl());
@@ -127,10 +126,9 @@ class LinkServiceTest {
 
   @Test
   @DisplayName("Get Link By Code - Success")
-  void getLinkByCode_Success() {
+  void getLinkByCodeSuccess() {
 
     User owner = new User();
-    owner.setId(UUID.randomUUID());
 
     Link link = new Link();
     link.setOwner(owner);
@@ -143,7 +141,7 @@ class LinkServiceTest {
 
     when(linkRepository.findByCode("abc123")).thenReturn(Optional.of(link));
 
-    LinkResponseDto result = linkService.getLinkByCode("abc123");
+    LinkResponseDto result = linkServiceImpl.getLinkByCode("abc123");
 
     assertEquals("abc123", result.code());
     assertEquals("https://example.com", result.originalUrl());
@@ -156,9 +154,15 @@ class LinkServiceTest {
 
   @Test
   @DisplayName("Deactivate Link - Success")
-  void deactivateLink_Success() {
+  void deactivateLinkSuccess() {
 
     User owner = new User();
+
+    Link link = new Link();
+    link.setOwner(owner);
+    link.setCode("abc123");
+    link.setStatus(LinkStatus.ACTIVE);
+
     LinkResponseDto linkResponseDto = new LinkResponseDto(
         UUID.randomUUID(),
         "abc123",
@@ -170,16 +174,10 @@ class LinkServiceTest {
         UUID.randomUUID()
     );
 
-    Link link = new Link();
-    link.setOwner(owner);
-    link.setCode("abc123");
-    link.setStatus(LinkStatus.ACTIVE);
-
-
     when(linkRepository.findByCode("abc123")).thenReturn(Optional.of(link));
     when(linkRepository.save(any(Link.class))).thenAnswer(i -> i.getArguments()[0]);
 
-    LinkResponseDto result = linkService.deactivateLink(linkResponseDto);
+    LinkResponseDto result = linkServiceImpl.deactivateLink(linkResponseDto);
 
     assertEquals("INACTIVE", result.status());
   }
@@ -187,7 +185,7 @@ class LinkServiceTest {
 
   @Test
   @DisplayName("Validate Link - Success")
-  void validateLink_Success() {
+  void validateLinkSuccess() {
     LinkResponseDto linkResponseDto = new LinkResponseDto(
         UUID.randomUUID(),
         "abc123",
@@ -199,8 +197,41 @@ class LinkServiceTest {
         UUID.randomUUID()
     );
 
-    linkService.validateLink(linkResponseDto);
-    Assertions.assertTrue(linkService.validateLink(linkResponseDto));
+    linkServiceImpl.validateLink(linkResponseDto);
+    Assertions.assertTrue(linkServiceImpl.validateLink(linkResponseDto));
+
+  }
+
+  @Test
+  @DisplayName("Update Link Expiration - Success")
+  void testUpdateLinkExpiration() {
+    String code = "abc123";
+    User owner = new User();
+    owner.setUsername("testUser");
+    ReflectionTestUtils.setField(owner, "id", UUID.randomUUID());
+
+    Link link = new Link();
+    link.setCode(code);
+    link.setExpiresAt(Instant.now().plusSeconds(3600));
+    link.setStatus(LinkStatus.ACTIVE);
+    link.setOwner(owner);
+
+    Authentication auth = mock(Authentication.class);
+    SecurityContext securityContext = mock(SecurityContext.class);
+    SecurityContextHolder.setContext(securityContext);
+
+    when(linkRepository.findByCode(code)).thenReturn(Optional.of(link));
+    when(linkRepository.save(any(Link.class))).thenAnswer(i -> i.getArguments()[0]);
+    when(userServiceImpl.getCurrentUserId()).thenReturn(owner.getId());
+
+    LinkResponseDto response = linkServiceImpl.updateLinkExpiration(code, Instant
+        .now()
+        .plusSeconds(7200));
+
+    assertNotNull(response);
+    assertEquals(code, response.code());
+    assertEquals(link.getExpiresAt(), response.expiresAt());
+    verify(linkRepository, times(1)).findByCode(code);
 
   }
 }

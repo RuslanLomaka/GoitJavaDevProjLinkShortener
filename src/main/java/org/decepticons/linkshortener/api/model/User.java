@@ -41,11 +41,11 @@ import org.hibernate.annotations.UpdateTimestamp;
  *   <li>{@code updatedAt} – Timestamp of last update.</li>
  * </ul>
  *
- * @since 1.0
- * author Ruslan Lomaka
+ *     @since 1.0
+ *     author Ruslan Lomaka
  */
+
 @Getter
-@Setter
 @Entity
 @Table(name = "users",
     uniqueConstraints = @UniqueConstraint(name = "uk_users_username", columnNames = "username"))

@@ -1,12 +1,16 @@
 package org.decepticons.linkshortener.api.security.model;
 
-import org.decepticons.linkshortener.api.model.User;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.Collections;
 import org.decepticons.linkshortener.api.model.Role;
+import org.decepticons.linkshortener.api.model.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collections;
-import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("CustomUserDetails Unit Tests")
 class CustomUserDetailsTest {

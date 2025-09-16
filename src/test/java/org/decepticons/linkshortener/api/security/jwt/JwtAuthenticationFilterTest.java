@@ -1,10 +1,21 @@
 package org.decepticons.linkshortener.api.security.jwt;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.decepticons.linkshortener.api.exceptions.InvalidTokenException;
+import java.io.IOException;
+import java.util.ArrayList;
+import org.decepticons.linkshortener.api.exception.InvalidTokenException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,13 +28,6 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
-import java.io.IOException;
-import java.util.ArrayList;
-
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for the JwtAuthenticationFilter.
@@ -52,7 +56,8 @@ class JwtAuthenticationFilterTest {
   @InjectMocks
   private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-  private final String authHeader = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciJ9.invalid-signature";
+  private final String authHeader
+      = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciJ9.invalid-signature";
   private UserDetails userDetails;
 
   @BeforeEach
@@ -64,7 +69,8 @@ class JwtAuthenticationFilterTest {
 
   @Test
   @DisplayName("given a valid token, when filtering, then authenticates the user successfully")
-  void givenValidToken_whenFiltering_thenAuthenticatesSuccessfully() throws ServletException, IOException {
+  void givenValidToken_whenFiltering_thenAuthenticatesSuccessfully()
+      throws ServletException, IOException {
     // Given
     when(request.getHeader("Authorization")).thenReturn(authHeader);
     when(jwtTokenUtil.extractUsername(anyString())).thenReturn("testuser");
@@ -96,7 +102,8 @@ class JwtAuthenticationFilterTest {
 
   @Test
   @DisplayName("given a malformed header, when filtering, then throws InvalidTokenException")
-  void givenMalformedHeader_whenFiltering_thenThrowsInvalidTokenException() throws ServletException, IOException {
+  void givenMalformedHeader_whenFiltering_thenThrowsInvalidTokenException()
+      throws ServletException, IOException {
     // Given
     when(request.getHeader("Authorization")).thenReturn("MalformedToken");
 
@@ -110,7 +117,8 @@ class JwtAuthenticationFilterTest {
 
   @Test
   @DisplayName("given an invalid token, when filtering, then throws InvalidTokenException")
-  void givenInvalidToken_whenFiltering_thenThrowsInvalidTokenException() throws ServletException, IOException {
+  void givenInvalidToken_whenFiltering_thenThrowsInvalidTokenException()
+      throws ServletException, IOException {
     // Given
     when(request.getHeader("Authorization")).thenReturn(authHeader);
     when(jwtTokenUtil.extractUsername(anyString())).thenReturn("testuser");
@@ -125,8 +133,10 @@ class JwtAuthenticationFilterTest {
   }
 
   @Test
-  @DisplayName("given a valid token but a nonexistent user, when filtering, then skips authentication")
-  void givenTokenForNonexistentUser_whenFiltering_thenSkipsAuthentication() throws ServletException, IOException {
+  @DisplayName("given a valid token but a nonexistent user, "
+      + "when filtering, then skips authentication")
+  void givenTokenForNonexistentUser_whenFiltering_thenSkipsAuthentication()
+      throws ServletException, IOException {
     // Given
     when(request.getHeader("Authorization")).thenReturn(authHeader);
     when(jwtTokenUtil.extractUsername(anyString())).thenReturn("nonexistentuser");

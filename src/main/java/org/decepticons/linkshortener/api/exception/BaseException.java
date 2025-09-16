@@ -1,4 +1,4 @@
-package org.decepticons.linkshortener.api.exceptions;
+package org.decepticons.linkshortener.api.exception;
 
 /**
  * Base class for custom exceptions in the application.

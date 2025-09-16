@@ -1,9 +1,22 @@
 package org.decepticons.linkshortener.api.security.service.impl;
 
-import org.decepticons.linkshortener.api.exceptions.InvalidTokenException;
-import org.decepticons.linkshortener.api.exceptions.UserAlreadyExistsException;
-import org.decepticons.linkshortener.api.model.User;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Collections;
+import java.util.Optional;
+import org.decepticons.linkshortener.api.exception.InvalidTokenException;
+import org.decepticons.linkshortener.api.exception.UserAlreadyExistsException;
 import org.decepticons.linkshortener.api.model.Role;
+import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.model.UserStatus;
 import org.decepticons.linkshortener.api.repository.RoleRepository;
 import org.decepticons.linkshortener.api.repository.UserRepository;
@@ -20,15 +33,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Collections;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for the AuthServiceImpl class.
@@ -110,7 +118,8 @@ class AuthServiceImplTest {
         .thenThrow(new BadCredentialsException("Invalid credentials"));
 
     // When & Then
-    assertThrows(BadCredentialsException.class, () -> authService.login("testuser", "wrongpassword"));
+    assertThrows(BadCredentialsException.class,
+        () -> authService.login("testuser", "wrongpassword"));
     verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
     verify(userAuthService, never()).findByUsername(anyString());
   }
@@ -134,7 +143,8 @@ class AuthServiceImplTest {
   }
 
   @Test
-  @DisplayName("given a null or malformed header, when refreshing, then throws InvalidTokenException")
+  @DisplayName("given a null or malformed header, "
+      + "when refreshing, then throws InvalidTokenException")
   void givenMalformedHeader_whenRefreshing_thenThrowsInvalidTokenException() {
     // When & Then
     assertThrows(InvalidTokenException.class, () -> authService.refreshToken(null));

@@ -1,4 +1,4 @@
-package org.decepticons.linkshortener.api.controller;
+package org.decepticons.linkshortener.api.v1.controller.unversioned;
 
 
 import jakarta.servlet.http.HttpServletResponse;

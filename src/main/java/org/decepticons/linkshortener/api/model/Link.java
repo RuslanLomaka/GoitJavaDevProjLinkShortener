@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
@@ -56,11 +57,10 @@ import org.hibernate.annotations.CreationTimestamp;
         @Index(name = "idx_links_expires_at", columnList = "expires_at")
     }
 )
-
 public class Link {
 
   @Id
-  @GeneratedValue
+  @GeneratedValue(strategy = GenerationType.UUID)
   @Column(name = "id", nullable = false, updatable = false)
   private UUID id;
 
@@ -99,14 +99,9 @@ public class Link {
   @Column(name = "status", nullable = false, length = 16)
   private LinkStatus status = LinkStatus.ACTIVE;
 
-
   /**
    * Increments the number of clicks associated with this link
    * and updates the {@code lastAccessedAt} timestamp.
-   * This method should be called whenever the shortened URL is
-   * accessed, ensuring both the click counter and the last access
-   * time are refreshed.
-   * </p>
    */
   public void incrementClicks() {
     this.clicks++;
@@ -115,12 +110,8 @@ public class Link {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof Link that)) {
-      return false;
-    }
+    if (this == o) return true;
+    if (!(o instanceof Link that)) return false;
     return Objects.equals(id, that.id);
   }
 

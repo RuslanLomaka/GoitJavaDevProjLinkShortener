@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class AuthRequestDto {
   /**
-   * The username provided for login. dummmy textField
+   * The username provided for login.
    */
   private String username;
 

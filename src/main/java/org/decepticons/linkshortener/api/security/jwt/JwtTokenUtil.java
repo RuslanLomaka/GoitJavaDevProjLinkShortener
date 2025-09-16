@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import org.decepticons.linkshortener.api.exception.InvalidTokenException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -92,7 +93,7 @@ public class JwtTokenUtil {
       final String username = extractUsername(token);
       return (username.equals(userDetails.getUsername())
           && !isTokenExpired(token));
-    } catch (JwtException | IllegalArgumentException e) {
+    } catch (InvalidTokenException e) {
       return false;
     }
   }
@@ -162,13 +163,17 @@ public class JwtTokenUtil {
    * @param token the JWT token
    * @return the claims
    */
-
   private Claims extractAllClaims(final String token) {
-    return Jwts.parserBuilder()
-        .setSigningKey(signingKey)
-        .build()
-        .parseClaimsJws(token)
-        .getBody();
+    try {
+      return Jwts.parserBuilder()
+              .setSigningKey(signingKey)
+              .build()
+              .parseClaimsJws(token)
+              .getBody();
+    } catch (JwtException | IllegalArgumentException ex) {
+      throw new InvalidTokenException(
+              "Invalid token provided during claims extraction.", ex);
+    }
   }
 
   /**

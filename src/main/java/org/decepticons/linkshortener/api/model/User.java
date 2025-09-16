@@ -41,8 +41,8 @@ import org.hibernate.annotations.UpdateTimestamp;
  *   <li>{@code updatedAt} – Timestamp of last update.</li>
  * </ul>
  *
- * @since 1.0
- * author Ruslan Lomaka
+ *     @since 1.0
+ *     author Ruslan Lomaka
  */
 
 @Getter

@@ -1,6 +1,18 @@
 package org.decepticons.linkshortener.api.controller;
 
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.UUID;
 import org.decepticons.linkshortener.api.dto.LinkResponseDto;
 import org.decepticons.linkshortener.api.dto.UpdateLinkExpirationRequestDto;
 import org.decepticons.linkshortener.api.dto.UrlRequestDto;
@@ -24,13 +36,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -59,12 +64,11 @@ class LinkCrudControllerTest {
 
   @Test
   @DisplayName("Create Short Link - Success")
-  void testCreateShortLink_Success() {
+  void testCreateShortLinkSuccess() {
     UrlRequestDto urlRequestDto = new UrlRequestDto();
     urlRequestDto.setUrl("https://example.com/some/long/url");
 
     User fakeUser = new User();
-//    fakeUser.setId(UUID.randomUUID());
     fakeUser.setUsername("someName");
 
 
@@ -99,7 +103,7 @@ class LinkCrudControllerTest {
 
   @Test
   @DisplayName("Create Short Link - User Not Found")
-  void testCreateShortLink_UserNotFound_Controller() {
+  void testCreateShortLinkUserNotFoundController() {
     UrlRequestDto urlRequestDto = new UrlRequestDto();
     urlRequestDto.setUrl("https://example.com/some/long/url");
 
@@ -121,7 +125,7 @@ class LinkCrudControllerTest {
 
   @Test
   @DisplayName("Get All My Links - Success")
-  void getAllMyLinks_SUCCESS() {
+  void getAllMyLinksSuccess() {
     int page = 0;
     int size = 10;
 
@@ -165,7 +169,7 @@ class LinkCrudControllerTest {
 
   @Test
   @DisplayName("Get All My Active Links - Success")
-  void getAllMyActiveLinks_SUCCESS() {
+  void getAllMyActiveLinksSuccess() {
     int page = 0;
     int size = 10;
 
@@ -214,7 +218,7 @@ class LinkCrudControllerTest {
 
   @Test
   @DisplayName("Delete Link - Success")
-  void testDeleteLink_SUCCESS() {
+  void testDeleteLinkSuccess() {
 
     UUID linkId = UUID.randomUUID();
     String mockCode = "abc123";
@@ -233,7 +237,7 @@ class LinkCrudControllerTest {
 
   @Test
   @DisplayName("Update Link Expiration Date - Success")
-  void testUpdateLinkExpirationDate(){
+  void testUpdateLinkExpirationDate() {
 
     String code = "abc123";
 
@@ -253,7 +257,8 @@ class LinkCrudControllerTest {
             UUID.randomUUID()
         ));
 
-    ResponseEntity<LinkResponseDto> response = linkController.updateLinkExpiration(requestDto, code);
+    ResponseEntity<LinkResponseDto> response =
+        linkController.updateLinkExpiration(requestDto, code);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());

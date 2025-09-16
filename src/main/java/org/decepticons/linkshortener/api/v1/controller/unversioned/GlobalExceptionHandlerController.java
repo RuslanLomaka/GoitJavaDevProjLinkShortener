@@ -1,4 +1,4 @@
-package org.decepticons.linkshortener.api.controller;
+package org.decepticons.linkshortener.api.v1.controller.unversioned;
 
 import java.time.Instant;
 import java.util.Map;

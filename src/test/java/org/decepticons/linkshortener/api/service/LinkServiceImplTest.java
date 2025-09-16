@@ -1,5 +1,19 @@
 package org.decepticons.linkshortener.api.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Optional;
+import java.util.UUID;
 import org.decepticons.linkshortener.api.dto.LinkResponseDto;
 import org.decepticons.linkshortener.api.dto.UrlRequestDto;
 import org.decepticons.linkshortener.api.model.Link;
@@ -17,17 +31,8 @@ import org.mockito.Mock;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
 
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
 class LinkServiceImplTest {
@@ -49,10 +54,9 @@ class LinkServiceImplTest {
 
   @Test
   @DisplayName("Link Creation - Success")
-  void testLinkCreation_Success() {
+  void testLinkCreationSuccess() {
     UrlRequestDto urlRequestDto = new UrlRequestDto();
     User user = new User();
-//    user.setId(UUID.randomUUID());
 
 
     urlRequestDto.setUrl("https://www.example.com");
@@ -70,7 +74,12 @@ class LinkServiceImplTest {
 
   @Test
   @DisplayName("Increment of Clicks - Success")
-  void incrementOfClicks_Success() {
+  void incrementOfClicksSuccess() {
+    Link link = new Link();
+    link.setOwner(new User());
+    link.setCode("abc123");
+    link.setClicks(0);
+
     LinkResponseDto linkResponseDto = new LinkResponseDto(
         UUID.randomUUID(),
         "abc123",
@@ -81,10 +90,6 @@ class LinkServiceImplTest {
         "ACTIVE",
         UUID.randomUUID()
     );
-    Link link = new Link();
-    link.setOwner(new User());
-    link.setCode("abc123");
-    link.setClicks(0);
 
     when(linkRepository.incrementClicksByCodeNative("abc123")).thenReturn(1);
     when(linkRepository.findByCode("abc123")).thenReturn(Optional.of(link));
@@ -95,10 +100,9 @@ class LinkServiceImplTest {
 
   @Test
   @DisplayName("Mapping to Response DTO - Success")
-  void testMapToResponse_Success() {
+  void testMapToResponseSuccess() {
     UUID userId = UUID.randomUUID();
     User owner = new User();
-//    owner.setId(userId);
 
     Link link = new Link();
     link.setCode("abc123");
@@ -122,10 +126,9 @@ class LinkServiceImplTest {
 
   @Test
   @DisplayName("Get Link By Code - Success")
-  void getLinkByCode_Success() {
+  void getLinkByCodeSuccess() {
 
     User owner = new User();
-//    owner.setId(UUID.randomUUID());
 
     Link link = new Link();
     link.setOwner(owner);
@@ -151,9 +154,15 @@ class LinkServiceImplTest {
 
   @Test
   @DisplayName("Deactivate Link - Success")
-  void deactivateLink_Success() {
+  void deactivateLinkSuccess() {
 
     User owner = new User();
+
+    Link link = new Link();
+    link.setOwner(owner);
+    link.setCode("abc123");
+    link.setStatus(LinkStatus.ACTIVE);
+
     LinkResponseDto linkResponseDto = new LinkResponseDto(
         UUID.randomUUID(),
         "abc123",
@@ -164,12 +173,6 @@ class LinkServiceImplTest {
         "ACTIVE",
         UUID.randomUUID()
     );
-
-    Link link = new Link();
-    link.setOwner(owner);
-    link.setCode("abc123");
-    link.setStatus(LinkStatus.ACTIVE);
-
 
     when(linkRepository.findByCode("abc123")).thenReturn(Optional.of(link));
     when(linkRepository.save(any(Link.class))).thenAnswer(i -> i.getArguments()[0]);
@@ -182,7 +185,7 @@ class LinkServiceImplTest {
 
   @Test
   @DisplayName("Validate Link - Success")
-  void validateLink_Success() {
+  void validateLinkSuccess() {
     LinkResponseDto linkResponseDto = new LinkResponseDto(
         UUID.randomUUID(),
         "abc123",
@@ -201,11 +204,11 @@ class LinkServiceImplTest {
 
   @Test
   @DisplayName("Update Link Expiration - Success")
-  void testUpdateLinkExpiration(){
+  void testUpdateLinkExpiration() {
     String code = "abc123";
     User owner = new User();
     owner.setUsername("testUser");
-//    owner.setId(UUID.randomUUID());
+    ReflectionTestUtils.setField(owner, "id", UUID.randomUUID());
 
     Link link = new Link();
     link.setCode(code);

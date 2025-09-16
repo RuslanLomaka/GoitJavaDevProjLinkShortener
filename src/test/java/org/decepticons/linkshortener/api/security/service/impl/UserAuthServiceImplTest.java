@@ -1,6 +1,15 @@
 package org.decepticons.linkshortener.api.security.service.impl;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import java.util.Optional;
 import org.decepticons.linkshortener.api.exception.InvalidPasswordException;
 import org.decepticons.linkshortener.api.exception.UserAlreadyExistsException;
 import org.decepticons.linkshortener.api.exception.UserNotFoundException;
@@ -14,13 +23,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for the UserAuthServiceImpl class.
@@ -95,7 +97,8 @@ class UserAuthServiceImplTest {
     when(userRepository.existsByUsername(anyString())).thenReturn(false);
 
     // When & Then
-    assertThrows(InvalidPasswordException.class, () -> userAuthService.registerUser(invalidPasswordUser));
+    assertThrows(InvalidPasswordException.class,
+        () -> userAuthService.registerUser(invalidPasswordUser));
     verify(userRepository, never()).save(any(User.class));
   }
 
@@ -115,13 +118,15 @@ class UserAuthServiceImplTest {
   }
 
   @Test
-  @DisplayName("given a nonexistent username, when finding by username, then throws UserNotFoundException")
+  @DisplayName("given a nonexistent username, "
+      + "when finding by username, then throws UserNotFoundException")
   void givenNonexistentUsername_whenFindingByUsername_thenThrowsUserNotFoundException() {
     // Given
     when(userRepository.findByUsername("nonexistentuser")).thenReturn(Optional.empty());
 
     // When & Then
-    assertThrows(UserNotFoundException.class, () -> userAuthService.findByUsername("nonexistentuser"));
+    assertThrows(UserNotFoundException.class,
+        () -> userAuthService.findByUsername("nonexistentuser"));
     verify(userRepository).findByUsername("nonexistentuser");
   }
 }

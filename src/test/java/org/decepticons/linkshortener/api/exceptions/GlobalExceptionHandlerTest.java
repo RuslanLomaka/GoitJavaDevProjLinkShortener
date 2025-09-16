@@ -1,8 +1,17 @@
 package org.decepticons.linkshortener.api.exceptions;
 
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import io.jsonwebtoken.JwtException;
-import org.decepticons.linkshortener.api.controller.GlobalExceptionHandlerController;
-import org.decepticons.linkshortener.api.exception.*;
+import org.decepticons.linkshortener.api.exception.ExpiredTokenException;
+import org.decepticons.linkshortener.api.exception.InvalidPasswordException;
+import org.decepticons.linkshortener.api.exception.InvalidTokenException;
+import org.decepticons.linkshortener.api.exception.UserAlreadyExistsException;
+import org.decepticons.linkshortener.api.exception.UserNotFoundException;
+import org.decepticons.linkshortener.api.v1.controller.unversioned.GlobalExceptionHandlerController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,10 +22,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 /**
  * Unit tests for the GlobalExceptionHandler.
  * These tests ensure that all custom exceptions are handled correctly
@@ -25,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("Global Exception Handler Tests")
 class GlobalExceptionHandlerTest {
 
-    private MockMvc mockMvc;
+  private MockMvc mockMvc;
 
   @BeforeEach
   void setup() {

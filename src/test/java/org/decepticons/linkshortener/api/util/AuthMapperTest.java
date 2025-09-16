@@ -1,17 +1,19 @@
 package org.decepticons.linkshortener.api.util;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import java.util.Collections;
+import java.util.List;
 import org.decepticons.linkshortener.api.dto.AuthResponseDto;
 import org.decepticons.linkshortener.api.dto.RegistrationRequestDto;
-import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.model.Role;
+import org.decepticons.linkshortener.api.model.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 
-import java.util.Collections;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("AuthMapper Unit Tests")
 class AuthMapperTest {
@@ -47,7 +49,8 @@ class AuthMapperTest {
     String refreshToken = "mocked.refresh.token";
 
     // When
-    AuthResponseDto responseDto = AuthMapper.toAuthResponseDto(user, authorities, accessToken, refreshToken);
+    AuthResponseDto responseDto
+        = AuthMapper.toAuthResponseDto(user, authorities, accessToken, refreshToken);
 
     // Then
     assertNotNull(responseDto);

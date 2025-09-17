@@ -34,4 +34,11 @@ public interface AuthService {
    * @return the newly registered User domain object
    */
   User registerUser(User user);
+
+  /**
+   * Logs out the user by revoking their token.
+   *
+   * @param token the token to be revoked
+   */
+  void logout(String token);
 }

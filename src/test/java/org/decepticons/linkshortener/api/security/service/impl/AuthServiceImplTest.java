@@ -4,24 +4,26 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
+import java.time.Instant;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Optional;
 import org.decepticons.linkshortener.api.exception.InvalidTokenException;
 import org.decepticons.linkshortener.api.exception.UserAlreadyExistsException;
+import org.decepticons.linkshortener.api.exception.UserNotFoundException;
+import org.decepticons.linkshortener.api.model.RevokedToken;
 import org.decepticons.linkshortener.api.model.Role;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.model.UserStatus;
+import org.decepticons.linkshortener.api.repository.RevokedTokenRepository;
 import org.decepticons.linkshortener.api.repository.RoleRepository;
 import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.decepticons.linkshortener.api.security.jwt.JwtTokenUtil;
-import org.decepticons.linkshortener.api.security.service.UserAuthService;
+import org.decepticons.linkshortener.api.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,9 +47,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 class AuthServiceImplTest {
 
   @Mock
-  private UserAuthService userAuthService;
-
-  @Mock
   private AuthenticationManager authenticationManager;
 
   @Mock
@@ -61,6 +60,12 @@ class AuthServiceImplTest {
 
   @Mock
   private RoleRepository roleRepository;
+
+  @Mock
+  private RevokedTokenRepository revokedTokenRepository;
+
+  @Mock
+  private UserService userService;
 
   @InjectMocks
   private AuthServiceImpl authService;
@@ -96,7 +101,7 @@ class AuthServiceImplTest {
     Authentication auth = mock(Authentication.class);
     when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
         .thenReturn(auth);
-    when(userAuthService.findByUsername("testuser")).thenReturn(testUser);
+    when(userService.findByUsername("testuser")).thenReturn(testUser);
 
     // When
     User actualUser = authService.login("testuser", "password123");
@@ -105,7 +110,7 @@ class AuthServiceImplTest {
     assertNotNull(actualUser);
     assertEquals("testuser", actualUser.getUsername());
     verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-    verify(userAuthService).findByUsername("testuser");
+    verify(userService).findByUsername("testuser");
   }
 
   @Test
@@ -119,28 +124,34 @@ class AuthServiceImplTest {
     assertThrows(BadCredentialsException.class,
         () -> authService.login("testuser", "wrongpassword"));
     verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-    verify(userAuthService, never()).findByUsername(anyString());
+    verify(userService, never()).findByUsername(anyString());
   }
 
-  @Test
-  @DisplayName("given a valid refresh token, when refreshing, then returns a User object")
-  void givenValidRefreshToken_whenRefreshing_thenReturnsUser() {
-    // Given
-    String authHeader = "Bearer " + expectedRefreshToken;
-    when(jwtUtil.extractUsername(expectedRefreshToken)).thenReturn("testuser");
-    when(userAuthService.findByUsername("testuser")).thenReturn(testUser);
+    @Test
+    @DisplayName("given a valid refresh token, when refreshing, then returns a User object")
+    void givenValidRefreshToken_whenRefreshing_thenReturnsUser() {
+        // Given
+        String authHeader = "Bearer " + expectedRefreshToken;
 
-    // When
-    User actualUser = authService.refreshToken(authHeader);
+        when(jwtUtil.extractUsername(expectedRefreshToken)).thenReturn("testuser");
+        when(userService.findByUsername("testuser")).thenReturn(testUser);
 
-    // Then
-    assertNotNull(actualUser);
-    assertEquals("testuser", actualUser.getUsername());
-    verify(jwtUtil).extractUsername(expectedRefreshToken);
-    verify(userAuthService).findByUsername("testuser");
-  }
+        // Stub the correct method
+        doReturn(true).when(jwtUtil).validateToken(anyString());
 
-  @Test
+        // When
+        User actualUser = authService.refreshToken(authHeader);
+
+        // Then
+        assertNotNull(actualUser);
+        assertEquals("testuser", actualUser.getUsername());
+        verify(jwtUtil).extractUsername(expectedRefreshToken);
+        verify(jwtUtil).validateToken(expectedRefreshToken);
+        verify(userService).findByUsername("testuser");
+    }
+
+
+    @Test
   @DisplayName("given a null or malformed header, "
       + "when refreshing, then throws InvalidTokenException")
   void givenMalformedHeader_whenRefreshing_thenThrowsInvalidTokenException() {
@@ -153,9 +164,9 @@ class AuthServiceImplTest {
   @DisplayName("given an existing user, when registering, then throws UserAlreadyExistsException")
   void givenExistingUser_whenRegistering_thenThrowsUserAlreadyExistsException() {
     // Given
+    when(userRepository.existsByUsername("testuser")).thenReturn(true);
     when(roleRepository.findByName("ROLE_USER")).thenReturn(Optional.of(userRole));
-    when(userAuthService.registerUser(any(User.class)))
-        .thenThrow(new UserAlreadyExistsException("testuser"));
+    testUser.setPasswordHash("Password123!");
 
     // When & Then
     assertThrows(UserAlreadyExistsException.class, () -> authService.registerUser(testUser));
@@ -166,8 +177,10 @@ class AuthServiceImplTest {
   void givenNewUser_whenRegistering_thenReturnsUser() {
     // Given
     when(roleRepository.findByName("ROLE_USER")).thenReturn(Optional.of(userRole));
-    // The stubbing is needed to ensure that userAuthService returns the mocked user object.
-    when(userAuthService.registerUser(any(User.class))).thenReturn(testUser);
+    when(userRepository.existsByUsername(anyString())).thenReturn(false);
+    when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
+    when(userRepository.save(any(User.class))).thenReturn(testUser);
+    testUser.setPasswordHash("Password123!");
 
     // When
     User registeredUser = authService.registerUser(testUser);
@@ -177,6 +190,33 @@ class AuthServiceImplTest {
     assertEquals("testuser", registeredUser.getUsername());
     assertEquals(UserStatus.ACTIVE, registeredUser.getStatus());
     assertFalse(registeredUser.getRoles().isEmpty());
-    verify(userAuthService).registerUser(any(User.class));
+    verify(userRepository).save(any(User.class));
+  }
+
+  @Test
+  @DisplayName("given a valid token, when logout, then revokes the token")
+  void givenValidToken_whenLogout_thenRevokesToken() {
+    // Given
+    String validToken = "Bearer valid.token.string";
+    String jwtToken = "valid.token.string";
+    Date expirationDate = new Date();
+    Instant expirationInstant = expirationDate.toInstant();
+
+    when(jwtUtil.extractExpiration(jwtToken)).thenReturn(expirationDate);
+    when(revokedTokenRepository.save(any(RevokedToken.class))).thenReturn(new RevokedToken());
+
+    // When
+    authService.logout(validToken);
+
+    // Then
+    verify(revokedTokenRepository).save(any(RevokedToken.class));
+  }
+
+  @Test
+  @DisplayName("given a null or malformed token, when logout, then throws InvalidTokenException")
+  void givenMalformedToken_whenLogout_thenThrowsInvalidTokenException() {
+    // When & Then
+    assertThrows(InvalidTokenException.class, () -> authService.logout(null));
+    assertThrows(InvalidTokenException.class, () -> authService.logout("InvalidToken"));
   }
 }

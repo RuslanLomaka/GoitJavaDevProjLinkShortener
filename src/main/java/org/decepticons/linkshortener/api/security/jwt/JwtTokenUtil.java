@@ -18,31 +18,39 @@ import org.springframework.stereotype.Component;
 
 /**
  * Utility class for generating and validating JWT tokens.
- * Provides methods to create JWT tokens for authenticated users,
- * refresh tokens, extract claims, and validate expiration.
+ * Provides methods to create JWT tokens for
+ * authenticated users, refresh tokens, extract claims,
+ * and validate expiration.
  */
 @Component
 public class JwtTokenUtil {
 
-  /** The number of milliseconds in a second. */
+  /**
+   * The number of milliseconds in a second.
+   */
   private static final long MILLISECONDS_IN_A_SECOND = 1000L;
 
-  /** The signing key. */
+  /**
+   * The signing key.
+   */
   private final Key signingKey;
 
-  /** The token validity duration for access tokens in seconds. */
+  /**
+   * The token validity duration for access tokens in seconds.
+   */
   private final long expirationSeconds;
 
-  /** The token validity duration for refresh tokens in seconds. */
+  /**
+   * The token validity duration for refresh tokens in seconds.
+   */
   private final long refreshExpirationSeconds;
 
   /**
    * Constructs a JwtTokenUtil with the given secrets and expiration times.
    *
    * @param secretValue            the secret key for signing JWT tokens
-   * @param expirationSecondsValue the access token validity duration in seconds
-   * @param refreshExpirationValue the refresh token validity
-   *                               duration in seconds
+   * @param expirationSecondsValue the access token validity duration (seconds)
+   * @param refreshExpirationValue the refresh token validity duration (seconds)
    */
   public JwtTokenUtil(
       @Value("${JWT_SECRET}") final String secretValue,
@@ -81,7 +89,7 @@ public class JwtTokenUtil {
   /**
    * Validates a JWT token against user details and expiration.
    *
-   * @param token the JWT token to validate.
+   * @param token       the JWT token to validate.
    * @param userDetails the user details to validate against.
    * @return true if the token is valid, false otherwise.
    */
@@ -92,6 +100,20 @@ public class JwtTokenUtil {
       final String username = extractUsername(token);
       return (username.equals(userDetails.getUsername())
           && !isTokenExpired(token));
+    } catch (InvalidTokenException e) {
+      return false;
+    }
+  }
+
+  /**
+   * Validates a JWT token by checking if it is expired.
+   *
+   * @param token the JWT token to validate.
+   * @return true if the token is valid and not expired, false otherwise.
+   */
+  public boolean validateToken(final String token) {
+    try {
+      return !isTokenExpired(token);
     } catch (InvalidTokenException e) {
       return false;
     }
@@ -110,10 +132,10 @@ public class JwtTokenUtil {
   /**
    * Extracts a specific claim from a JWT token.
    *
-   * @param <T> the type of the claim to extract
-   * @param token the JWT token from which to extract the claim
+   * @param <T>            the type of the claim to extract
+   * @param token          the JWT token from which to extract the claim
    * @param claimsResolver a function to resolve a specific claim
-   *     from the token's claims
+   *                       from the token's claims
    * @return the extracted claim
    */
   public <T> T extractClaim(
@@ -136,8 +158,8 @@ public class JwtTokenUtil {
   /**
    * Builds a JWT token with claims and subject.
    *
-   * @param claims the claims to be included in the token.
-   * @param subject the subject of the token (usually the username).
+   * @param claims                 the claims to be included in the token.
+   * @param subject                the subject of the token (username).
    * @param expirationSecondsParam the token validity in seconds.
    * @return the built JWT token string.
    */
@@ -165,13 +187,13 @@ public class JwtTokenUtil {
   private Claims extractAllClaims(final String token) {
     try {
       return Jwts.parserBuilder()
-              .setSigningKey(signingKey)
-              .build()
-              .parseClaimsJws(token)
-              .getBody();
+          .setSigningKey(signingKey)
+          .build()
+          .parseClaimsJws(token)
+          .getBody();
     } catch (JwtException | IllegalArgumentException ex) {
       throw new InvalidTokenException(
-              "Invalid token provided during claims extraction.", ex);
+          "Invalid token provided during claims extraction.", ex);
     }
   }
 

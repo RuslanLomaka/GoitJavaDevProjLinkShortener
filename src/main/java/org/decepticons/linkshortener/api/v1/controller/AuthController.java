@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.decepticons.linkshortener.api.dto.AuthRequestDto;
 import org.decepticons.linkshortener.api.dto.AuthResponseDto;
@@ -14,6 +13,7 @@ import org.decepticons.linkshortener.api.security.jwt.JwtTokenUtil;
 import org.decepticons.linkshortener.api.security.model.CustomUserDetails;
 import org.decepticons.linkshortener.api.security.service.AuthService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,7 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST controller for user authentication.
- * Provides endpoints for user registration, login, and token refresh.
+ * Provides endpoints for user registration, login, and
+ * token refresh.
  */
 @Tag(
     name = "Authentication",
@@ -34,10 +35,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthController {
 
-  /** Service for authentication and user registration operations. */
+  /**
+   * Service for authentication and user registration operations.
+   */
   private final AuthService authService;
 
-  /** Utility for generating and validating JWT tokens. */
+  /**
+   * Utility for generating and validating JWT tokens.
+   */
   private final JwtTokenUtil jwtUtil;
 
   /**
@@ -70,13 +75,16 @@ public class AuthController {
   public ResponseEntity<AuthResponseDto> authenticate(
       @RequestBody final AuthRequestDto request
   ) {
-    User user = authService.login(request.getUsername(), request.getPassword());
+    User user = authService.login(
+        request.getUsername(),
+        request.getPassword()
+    );
     UserDetails userDetails = new CustomUserDetails(user);
     String accessToken = jwtUtil.generateAccessToken(userDetails);
     String refreshToken = jwtUtil.generateRefreshToken(userDetails);
     List<String> roles = userDetails.getAuthorities().stream()
-        .map(Object::toString)
-        .collect(Collectors.toList());
+        .map(GrantedAuthority::getAuthority)
+        .toList();
 
     return ResponseEntity.ok(new AuthResponseDto(
         user.getUsername(),
@@ -102,8 +110,8 @@ public class AuthController {
     String newAccessToken = jwtUtil.generateAccessToken(userDetails);
     String newRefreshToken = jwtUtil.generateRefreshToken(userDetails);
     List<String> roles = userDetails.getAuthorities().stream()
-        .map(Object::toString)
-        .collect(Collectors.toList());
+        .map(GrantedAuthority::getAuthority)
+        .toList();
 
     return ResponseEntity.ok(new AuthResponseDto(
         user.getUsername(),
@@ -111,5 +119,21 @@ public class AuthController {
         newAccessToken,
         newRefreshToken
     ));
+  }
+
+  /**
+   * Logs out the user by revoking their token.
+   *
+   * @param authHeader the Authorization header containing
+   *                   the token to be revoked
+   * @return a success message
+   */
+  @PostMapping("/logout")
+  @Operation(summary = "Logout and revoke token")
+  public ResponseEntity<String> logout(
+      @RequestHeader("Authorization") final String authHeader
+  ) {
+    authService.logout(authHeader);
+    return ResponseEntity.ok("Successfully logged out");
   }
 }

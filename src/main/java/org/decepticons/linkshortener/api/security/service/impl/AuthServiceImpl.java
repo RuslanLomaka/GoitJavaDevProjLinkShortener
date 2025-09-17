@@ -1,17 +1,24 @@
 package org.decepticons.linkshortener.api.security.service.impl;
 
+import jakarta.transaction.Transactional;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.decepticons.linkshortener.api.exception.InvalidPasswordException;
 import org.decepticons.linkshortener.api.exception.InvalidTokenException;
+import org.decepticons.linkshortener.api.exception.UserAlreadyExistsException;
+import org.decepticons.linkshortener.api.model.RevokedToken;
 import org.decepticons.linkshortener.api.model.Role;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.model.UserStatus;
+import org.decepticons.linkshortener.api.repository.RevokedTokenRepository;
 import org.decepticons.linkshortener.api.repository.RoleRepository;
 import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.decepticons.linkshortener.api.security.jwt.JwtTokenUtil;
 import org.decepticons.linkshortener.api.security.service.AuthService;
-import org.decepticons.linkshortener.api.security.service.UserAuthService;
+import org.decepticons.linkshortener.api.service.UserService;
+import org.decepticons.linkshortener.api.util.PasswordValidator;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,7 +26,8 @@ import org.springframework.stereotype.Service;
 
 /**
  * Service implementation for user authentication and authorization.
- * Handles user login, token refresh, and registration processes.
+ * Handles user login, token
+ * refresh, and registration processes.
  */
 @Service
 @RequiredArgsConstructor
@@ -33,7 +41,7 @@ public class AuthServiceImpl implements AuthService {
   /**
    * Service for handling user-related authentication operations.
    */
-  private final UserAuthService userAuthService;
+  private final UserService userService;
 
   /**
    * Manages authentication requests and processes them.
@@ -49,6 +57,11 @@ public class AuthServiceImpl implements AuthService {
    * Repository for user data access.
    */
   private final UserRepository userRepository;
+
+  /**
+   * Repository for managing revoked JWT tokens.
+   */
+  private final RevokedTokenRepository revokedTokenRepository;
 
   /**
    * Encodes and verifies user passwords.
@@ -72,7 +85,7 @@ public class AuthServiceImpl implements AuthService {
     authManager.authenticate(
         new UsernamePasswordAuthenticationToken(username, password)
     );
-    return userAuthService.findByUsername(username);
+    return userService.findByUsername(username);
   }
 
   /**
@@ -84,15 +97,26 @@ public class AuthServiceImpl implements AuthService {
    */
   @Override
   public User refreshToken(final String authorizationHeader) {
-    if (authorizationHeader == null
-        || !authorizationHeader.startsWith(BEARER_PREFIX)) {
+    if (
+        authorizationHeader == null
+            || !authorizationHeader.startsWith(BEARER_PREFIX)
+    ) {
       throw new InvalidTokenException(
           "Missing or malformed Authorization header"
       );
     }
     String jwtToken = authorizationHeader.substring(BEARER_PREFIX.length());
+
+    if (revokedTokenRepository.existsByToken(jwtToken)) {
+      throw new InvalidTokenException("Token has been revoked");
+    }
+
+    if (!jwtUtil.validateToken(jwtToken)) {
+      throw new InvalidTokenException("Invalid or expired token");
+    }
+
     String username = jwtUtil.extractUsername(jwtToken);
-    return userAuthService.findByUsername(username);
+    return userService.findByUsername(username);
   }
 
   /**
@@ -103,6 +127,7 @@ public class AuthServiceImpl implements AuthService {
    * @throws IllegalStateException if the default 'ROLE_USER' role is not found.
    */
   @Override
+  @Transactional
   public User registerUser(final User user) {
     Optional<Role> userRole = roleRepository.findByName("ROLE_USER");
     if (userRole.isEmpty()) {
@@ -110,8 +135,41 @@ public class AuthServiceImpl implements AuthService {
           "Default role 'ROLE_USER' not found in the database."
       );
     }
+
+    if (userRepository.existsByUsername(user.getUsername())) {
+      throw new UserAlreadyExistsException(user.getUsername());
+    }
+
+    if (!PasswordValidator.isValid(user.getPasswordHash())) {
+      throw new InvalidPasswordException(
+          "Password does not meet complexity requirements"
+      );
+    }
+
+    user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
     user.setStatus(UserStatus.ACTIVE);
     user.setRoles(Collections.singleton(userRole.get()));
-    return userAuthService.registerUser(user);
+    return userRepository.save(user);
+  }
+
+  /**
+   * Logs out the user by revoking their token.
+   *
+   * @param authHeader the Authorization header containing
+   *                   the token to be revoked
+   */
+  @Override
+  @Transactional
+  public void logout(final String authHeader) {
+    if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+      throw new InvalidTokenException(
+          "Missing or malformed Authorization header"
+      );
+    }
+
+    String accessToken = authHeader.substring(BEARER_PREFIX.length());
+    Instant accessExpiresAt = jwtUtil.extractExpiration(accessToken)
+        .toInstant();
+    revokedTokenRepository.save(new RevokedToken(accessToken, accessExpiresAt));
   }
 }

@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.util.Collection;
 import lombok.Getter;
 import org.decepticons.linkshortener.api.model.User;
+import org.decepticons.linkshortener.api.model.UserStatus;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -34,7 +35,7 @@ public final class CustomUserDetails implements UserDetails {
   /**
    * Returns the authorities granted to the user.
    *
-     * @return collection of granted authorities
+   * @return collection of granted authorities (roles)
    */
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -63,7 +64,6 @@ public final class CustomUserDetails implements UserDetails {
 
   /**
    * Indicates whether the user's account has expired.
-   * Subclasses may override to change the expiration logic.
    *
    * @return true if the account is not expired
    */
@@ -74,23 +74,32 @@ public final class CustomUserDetails implements UserDetails {
 
   /**
    * Indicates whether the user's account is locked.
-   * Subclasses may override to change the lock logic.
    *
-   * @return true if the account is not locked
+   * @return true if the user is not LOCKED
    */
   @Override
   public boolean isAccountNonLocked() {
-    return true;
+    return user.getStatus() != null && user.getStatus() != UserStatus.LOCKED;
   }
 
   /**
    * Indicates whether the user's credentials are expired.
-   * Subclasses may override to change the credential expiration logic.
    *
-   * @return true if the credentials are valid
+   * @return true if credentials are valid
    */
   @Override
   public boolean isCredentialsNonExpired() {
     return true;
+  }
+
+  /**
+   * Indicates whether the user is enabled.
+   * Here we consider ACTIVE as enabled, LOCKED as disabled.
+   *
+   * @return true if user is ACTIVE
+   */
+  @Override
+  public boolean isEnabled() {
+    return user.getStatus() != null && user.getStatus() == UserStatus.ACTIVE;
   }
 }

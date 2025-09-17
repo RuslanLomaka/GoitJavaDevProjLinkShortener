@@ -5,11 +5,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.decepticons.linkshortener.api.dto.AuthRequestDto;
 import org.decepticons.linkshortener.api.dto.RegistrationRequestDto;
+import org.decepticons.linkshortener.api.model.RevokedToken;
 import org.decepticons.linkshortener.api.model.User;
+import org.decepticons.linkshortener.api.repository.RevokedTokenRepository;
 import org.decepticons.linkshortener.api.repository.UserRepository;
+import org.decepticons.linkshortener.api.security.jwt.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,6 +48,12 @@ class AuthControllerTest {
   @Autowired
   private UserRepository userRepository;
   @Autowired
+  private RevokedTokenRepository revokedTokenRepository;
+
+  @Autowired
+  private JwtTokenUtil jwtUtil;
+
+  @Autowired
   private PasswordEncoder passwordEncoder;
   private final ObjectMapper objectMapper = new ObjectMapper();
   // Use a PostgreSQL container for the tests
@@ -70,7 +80,8 @@ class AuthControllerTest {
     mockMvc = MockMvcBuilders
         .webAppContextSetup(webApplicationContext)
         .build();
-    userRepository.deleteAll(); // Clean up before each test
+    userRepository.deleteAll();
+    revokedTokenRepository.deleteAll();
   }
 
   @Test
@@ -205,4 +216,72 @@ class AuthControllerTest {
             .header("Authorization", "Bearer " + invalidToken))
         .andExpect(status().isUnauthorized());
   }
+
+    @Test
+    @DisplayName("given a valid token, when logging out, then returns 200 OK")
+    void givenValidToken_whenLoggingOut_thenReturnsOk() throws Exception {
+        // 1. Register and log in to get a valid token
+        RegistrationRequestDto registrationDto = new RegistrationRequestDto();
+        registrationDto.setUsername("logoutuser");
+        registrationDto.setPassword("Password123!");
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registrationDto)))
+                .andExpect(status().isOk());
+
+        AuthRequestDto loginDto = new AuthRequestDto();
+        loginDto.setUsername("logoutuser");
+        loginDto.setPassword("Password123!");
+        MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginDto)))
+                .andExpect(status().isOk()) // Ensure the login is successful
+                .andReturn();
+        JsonNode jsonNode = objectMapper.readTree(result.getResponse().getContentAsString());
+        String accessToken = jsonNode.get("accessToken").asText();
+
+        // 2. Perform a POST request to the logout endpoint
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("given a revoked refresh token, when refreshing, then returns 401 Unauthorized")
+    void givenRevokedRefreshToken_whenRefreshing_thenReturnsUnauthorized() throws Exception {
+        // 1. Register a new user
+        RegistrationRequestDto registrationDto = new RegistrationRequestDto();
+        registrationDto.setUsername("revokeduser");
+        registrationDto.setPassword("Password123!");
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registrationDto)))
+                .andExpect(status().isOk());
+
+        // 2. Log in to get access and refresh tokens
+        AuthRequestDto loginDto = new AuthRequestDto();
+        loginDto.setUsername("revokeduser");
+        loginDto.setPassword("Password123!");
+        MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginDto)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        JsonNode jsonNode = objectMapper.readTree(loginResult.getResponse().getContentAsString());
+        String accessToken = jsonNode.get("accessToken").asText();
+        String refreshToken = jsonNode.get("refreshToken").asText();
+
+        // 3. Revoke the refresh token manually
+        revokedTokenRepository.save(new RevokedToken(
+                refreshToken,
+                jwtUtil.extractExpiration(refreshToken).toInstant()
+        ));
+
+        // 4. Attempt to refresh with the revoked refresh token
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .header("Authorization", "Bearer " + refreshToken))
+                .andExpect(status().isUnauthorized());
+    }
+
 }

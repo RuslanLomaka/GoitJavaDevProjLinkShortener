@@ -8,6 +8,7 @@ package org.decepticons.linkshortener.api.security.config;
 import org.decepticons.linkshortener.api.model.User;
 import org.decepticons.linkshortener.api.repository.UserRepository;
 import org.decepticons.linkshortener.api.security.jwt.JwtAuthenticationFilter;
+import org.decepticons.linkshortener.api.security.model.CustomUserDetails;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -117,10 +118,7 @@ public class SecurityConfig {
               "User was not found"
           ));
 
-      return org.springframework.security.core.userdetails.User
-          .withUsername(user.getUsername())
-          .password(user.getPasswordHash())
-          .build();
+      return new CustomUserDetails(user);
     };
   }
 

@@ -2,12 +2,7 @@ package org.decepticons.linkshortener.api.security.jwt;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -15,7 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
-import org.decepticons.linkshortener.api.exception.InvalidTokenException;
+import org.decepticons.linkshortener.api.repository.RevokedTokenRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,124 +23,123 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
-/**
- * Unit tests for the JwtAuthenticationFilter.
- * These tests focus on the filter's behavior when processing HTTP requests
- * with various JWT token scenarios.
- */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("JWT Authentication Filter Unit Tests")
 class JwtAuthenticationFilterTest {
 
-  @Mock
-  private JwtTokenUtil jwtTokenUtil;
+    @Mock
+    private JwtTokenUtil jwtTokenUtil;
 
-  @Mock
-  private UserDetailsService userDetailsService;
+    @Mock
+    private UserDetailsService userDetailsService;
 
-  @Mock
-  private HttpServletRequest request;
+    @Mock
+    private RevokedTokenRepository revokedTokenRepository;
 
-  @Mock
-  private HttpServletResponse response;
+    @Mock
+    private HttpServletRequest request;
 
-  @Mock
-  private FilterChain filterChain;
+    @Mock
+    private HttpServletResponse response;
 
-  @InjectMocks
-  private JwtAuthenticationFilter jwtAuthenticationFilter;
+    @Mock
+    private FilterChain filterChain;
 
-  private final String authHeader
-      = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciJ9.invalid-signature";
-  private UserDetails userDetails;
+    @InjectMocks
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-  @BeforeEach
-  void setUp() {
-    // Given
-    SecurityContextHolder.clearContext();
-    userDetails = new User("testuser", "password", new ArrayList<>());
-  }
+    private final String authHeader
+            = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciJ9.invalid-signature";
+    private UserDetails userDetails;
 
-  @Test
-  @DisplayName("given a valid token, when filtering, then authenticates the user successfully")
-  void givenValidToken_whenFiltering_thenAuthenticatesSuccessfully()
-      throws ServletException, IOException {
-    // Given
-    when(request.getHeader("Authorization")).thenReturn(authHeader);
-    when(jwtTokenUtil.extractUsername(anyString())).thenReturn("testuser");
-    when(userDetailsService.loadUserByUsername("testuser")).thenReturn(userDetails);
-    when(jwtTokenUtil.validateToken(anyString(), any(UserDetails.class))).thenReturn(true);
+    @BeforeEach
+    void setUp() {
+        SecurityContextHolder.clearContext();
+        userDetails = new User("testuser", "password", new ArrayList<>());
+    }
 
-    // When
-    jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+    @Test
+    @DisplayName("given a valid token, when filtering, then authenticates the user successfully")
+    void givenValidToken_whenFiltering_thenAuthenticatesSuccessfully()
+            throws ServletException, IOException {
+        when(request.getHeader("Authorization")).thenReturn(authHeader);
+        when(jwtTokenUtil.extractUsername(anyString())).thenReturn("testuser");
+        when(revokedTokenRepository.existsByToken(anyString())).thenReturn(false);
+        when(userDetailsService.loadUserByUsername("testuser")).thenReturn(userDetails);
+        when(jwtTokenUtil.validateToken(anyString(), any(UserDetails.class))).thenReturn(true);
 
-    // Then
-    assertNotNull(SecurityContextHolder.getContext().getAuthentication());
-    verify(filterChain).doFilter(request, response);
-  }
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
-  @Test
-  @DisplayName("given no Authorization header, when filtering, then skips authentication")
-  void givenNoHeader_whenFiltering_thenSkipsAuthentication() throws ServletException, IOException {
-    // Given
-    when(request.getHeader("Authorization")).thenReturn(null);
+        assertNotNull(SecurityContextHolder.getContext().getAuthentication());
+        verify(filterChain).doFilter(request, response);
+    }
 
-    // When
-    jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+    @Test
+    @DisplayName("given a revoked token, when filtering, then skips authentication without calling the filter chain")
+    void givenRevokedToken_whenFiltering_thenSkipsAuthentication() throws ServletException, IOException {
+        when(request.getHeader("Authorization")).thenReturn(authHeader);
+        when(revokedTokenRepository.existsByToken(anyString())).thenReturn(true);
 
-    // Then
-    assertNull(SecurityContextHolder.getContext().getAuthentication());
-    verify(filterChain).doFilter(request, response);
-    verify(jwtTokenUtil, never()).extractUsername(anyString());
-  }
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
-  @Test
-  @DisplayName("given a malformed header, when filtering, then throws InvalidTokenException")
-  void givenMalformedHeader_whenFiltering_thenThrowsInvalidTokenException()
-      throws ServletException, IOException {
-    // Given
-    when(request.getHeader("Authorization")).thenReturn("MalformedToken");
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        // Do not verify filterChain.doFilter because it is intentionally NOT called
+        verify(jwtTokenUtil, never()).extractUsername(anyString());
+    }
 
-    // When & Then
-    assertThrows(InvalidTokenException.class, () ->
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain));
-    assertNull(SecurityContextHolder.getContext().getAuthentication());
-    verify(filterChain, never()).doFilter(request, response);
-    verify(jwtTokenUtil, never()).extractUsername(anyString());
-  }
+    @Test
+    @DisplayName("given no Authorization header, when filtering, then skips authentication")
+    void givenNoHeader_whenFiltering_thenSkipsAuthentication()
+            throws ServletException, IOException {
+        when(request.getHeader("Authorization")).thenReturn(null);
 
-  @Test
-  @DisplayName("given an invalid token, when filtering, then throws InvalidTokenException")
-  void givenInvalidToken_whenFiltering_thenThrowsInvalidTokenException()
-      throws ServletException, IOException {
-    // Given
-    when(request.getHeader("Authorization")).thenReturn(authHeader);
-    when(jwtTokenUtil.extractUsername(anyString())).thenReturn("testuser");
-    when(userDetailsService.loadUserByUsername("testuser")).thenReturn(userDetails);
-    when(jwtTokenUtil.validateToken(anyString(), any(UserDetails.class))).thenReturn(false);
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
-    // When & Then
-    assertThrows(InvalidTokenException.class, () ->
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain));
-    assertNull(SecurityContextHolder.getContext().getAuthentication());
-    verify(filterChain, never()).doFilter(request, response);
-  }
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        verify(filterChain).doFilter(request, response);
+        verify(jwtTokenUtil, never()).extractUsername(anyString());
+    }
 
-  @Test
-  @DisplayName("given a valid token but a nonexistent user, "
-      + "when filtering, then skips authentication")
-  void givenTokenForNonexistentUser_whenFiltering_thenSkipsAuthentication()
-      throws ServletException, IOException {
-    // Given
-    when(request.getHeader("Authorization")).thenReturn(authHeader);
-    when(jwtTokenUtil.extractUsername(anyString())).thenReturn("nonexistentuser");
-    when(userDetailsService.loadUserByUsername("nonexistentuser")).thenReturn(null);
+    @Test
+    @DisplayName("given a malformed header, when filtering, then skips authentication")
+    void givenMalformedHeader_whenFiltering_thenSkipsAuthentication()
+            throws ServletException, IOException {
+        when(request.getHeader("Authorization")).thenReturn("MalformedToken");
 
-    // When
-    jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
-    // Then
-    assertNull(SecurityContextHolder.getContext().getAuthentication());
-    verify(filterChain).doFilter(request, response);
-  }
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        verify(filterChain).doFilter(request, response);
+        verify(jwtTokenUtil, never()).extractUsername(anyString());
+    }
+
+    @Test
+    @DisplayName("given an invalid token, when filtering, then skips authentication without calling the filter chain")
+    void givenInvalidToken_whenFiltering_thenSkipsAuthentication() throws ServletException, IOException {
+        when(request.getHeader("Authorization")).thenReturn(authHeader);
+        when(revokedTokenRepository.existsByToken(anyString())).thenReturn(false);
+        when(jwtTokenUtil.extractUsername(anyString())).thenReturn("testuser");
+        when(userDetailsService.loadUserByUsername("testuser")).thenReturn(userDetails);
+        when(jwtTokenUtil.validateToken(anyString(), any(UserDetails.class))).thenReturn(false);
+
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        // Do not verify filterChain.doFilter because it is intentionally NOT called
+    }
+
+    @Test
+    @DisplayName("given a valid token but a nonexistent user, when filtering, then skips authentication")
+    void givenTokenForNonexistentUser_whenFiltering_thenSkipsAuthentication()
+            throws ServletException, IOException {
+        when(request.getHeader("Authorization")).thenReturn(authHeader);
+        when(revokedTokenRepository.existsByToken(anyString())).thenReturn(false);
+        when(jwtTokenUtil.extractUsername(anyString())).thenReturn("nonexistentuser");
+        when(userDetailsService.loadUserByUsername("nonexistentuser")).thenReturn(null);
+
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        verify(filterChain).doFilter(request, response);
+    }
 }

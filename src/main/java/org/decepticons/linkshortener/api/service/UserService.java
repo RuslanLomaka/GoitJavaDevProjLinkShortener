@@ -4,7 +4,8 @@ import java.util.UUID;
 import org.decepticons.linkshortener.api.model.User;
 
 /**
- * Service interface for retrieving information about the currently authenticated user.
+ * Service interface for retrieving information
+ * about the currently authenticated user.
  */
 public interface UserService {
 
@@ -21,4 +22,13 @@ public interface UserService {
    * @return the UUID of the current user
    */
   UUID getCurrentUserId();
+
+  /**
+   * Finds a user by their username.
+   *
+   * @param username the username to search for
+   * @return the User object
+   */
+  User findByUsername(String username);
+
 }

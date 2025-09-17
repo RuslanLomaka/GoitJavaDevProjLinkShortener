@@ -5,7 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import org.decepticons.linkshortener.api.exception.InvalidTokenException;
+import org.decepticons.linkshortener.api.repository.RevokedTokenRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,42 +21,64 @@ import org.springframework.web.filter.OncePerRequestFilter;
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-  /** Logger for JWT authentication filter. */
-  private static final Logger LOG =
-      LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
-  /** HTTP header containing the JWT token. */
+  /**
+   * Logger for the JwtAuthenticationFilter class.
+   */
+  private static final Logger LOG = LoggerFactory.getLogger(
+      JwtAuthenticationFilter.class
+  );
+
+  /**
+   * The name of the authorization header.
+   */
   private static final String AUTHORIZATION_HEADER = "Authorization";
 
-  /** Prefix used in the Authorization header. */
+  /**
+   * The prefix for a Bearer token.
+   */
   private static final String BEARER_PREFIX = "Bearer ";
 
-  /** Utility class for JWT operations. */
+  /**
+   * Utility for handling JWT tokens.
+   */
   private final JwtTokenUtil jwtTokenUtil;
 
-  /** Service to load user details from the database. */
+  /**
+   * Service for loading user details.
+   */
   private final UserDetailsService userDetailsService;
 
   /**
-   * Constructs a JwtAuthenticationFilter with required dependencies.
-   *
-   * @param inJwtTokenUtil utility to parse and validate JWT tokens
-   * @param inUserDetailsService service to load user details
+   * Repository to check for revoked tokens.
    */
-  public JwtAuthenticationFilter(final JwtTokenUtil inJwtTokenUtil,
-      final UserDetailsService inUserDetailsService) {
-    this.jwtTokenUtil = inJwtTokenUtil;
-    this.userDetailsService = inUserDetailsService;
+  private final RevokedTokenRepository revokedTokenRepository;
+
+  /**
+   * Constructs a new JwtAuthenticationFilter.
+   *
+   * @param jwtTokenUtilParam The JWT utility.
+   * @param userDetailsServiceParam The user details service.
+   * @param revokedTokenRepositoryParam The revoked token repository.
+   */
+  public JwtAuthenticationFilter(
+      final JwtTokenUtil jwtTokenUtilParam,
+      final UserDetailsService userDetailsServiceParam,
+      final RevokedTokenRepository revokedTokenRepositoryParam
+  ) {
+    this.jwtTokenUtil = jwtTokenUtilParam;
+    this.userDetailsService = userDetailsServiceParam;
+    this.revokedTokenRepository = revokedTokenRepositoryParam;
   }
 
   /**
-   * Filters each request to validate JWT tokens and set authentication.
+   * Filters incoming requests to validate JWT tokens and authenticate users.
    *
-   * @param request the HTTP request
-   * @param response the HTTP response
-   * @param filterChain the filter chain
-   * @throws ServletException if a servlet error occurs
-   * @throws IOException if an I/O error occurs
+   * @param request The servlet request.
+   * @param response The servlet response.
+   * @param filterChain The filter chain.
+   * @throws ServletException if a servlet-specific error occurs.
+   * @throws IOException if an I/O error occurs.
    */
   @Override
   protected void doFilterInternal(final HttpServletRequest request,
@@ -65,20 +87,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       throws ServletException, IOException {
 
     final String authorizationHeader = request.getHeader(AUTHORIZATION_HEADER);
-    String jwtToken;
 
-    if (authorizationHeader == null) {
-      LOG.debug("No JWT token, skipping authentication");
+    if (authorizationHeader == null
+        || !authorizationHeader.startsWith(BEARER_PREFIX)) {
       filterChain.doFilter(request, response);
       return;
     }
 
-    if (!authorizationHeader.startsWith(BEARER_PREFIX)) {
-      LOG.warn("JWT Token does not begin with Bearer String");
-      throw new InvalidTokenException("JWT Token must start with 'Bearer '");
-    }
+    String jwtToken = authorizationHeader.substring(BEARER_PREFIX.length());
 
-    jwtToken = authorizationHeader.substring(BEARER_PREFIX.length());
+    // Check if the token is revoked
+    if (revokedTokenRepository.existsByToken(jwtToken)) {
+      LOG.warn("Revoked token used: {}", jwtToken);
+      SecurityContextHolder.clearContext();
+      response.sendError(
+          HttpServletResponse.SC_UNAUTHORIZED,
+          "Token has been revoked");
+      return;
+    }
 
     final String username = jwtTokenUtil.extractUsername(jwtToken);
 
@@ -93,14 +119,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       }
 
       if (!jwtTokenUtil.validateToken(jwtToken, userDetails)) {
-        throw new InvalidTokenException("Token is expired or invalid");
+        SecurityContextHolder.clearContext();
+        response.sendError(
+            HttpServletResponse.SC_UNAUTHORIZED,
+            "Token is expired or invalid");
+        return;
       }
 
       UsernamePasswordAuthenticationToken authToken =
-          new UsernamePasswordAuthenticationToken(userDetails, null,
+          new UsernamePasswordAuthenticationToken(
+              userDetails,
+              null,
               userDetails.getAuthorities());
       authToken.setDetails(
-          new WebAuthenticationDetailsSource().buildDetails(request));
+          new WebAuthenticationDetailsSource().buildDetails(request)
+      );
       SecurityContextHolder.getContext().setAuthentication(authToken);
     }
 
@@ -108,10 +141,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   }
 
   /**
-   * Determines if this filter should not apply to a given request.
+   * Determines whether this filter should be applied to the current request.
    *
-   * @param request the HTTP request
-   * @return true if filter should be skipped, false otherwise
+   * @param request The servlet request.
+   * @return true if the filter should not be applied, false otherwise.
    */
   @Override
   protected boolean shouldNotFilter(final HttpServletRequest request) {
@@ -125,5 +158,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         || path.startsWith("/swagger-ui")
         || path.startsWith("/v3/api-docs");
   }
-
 }

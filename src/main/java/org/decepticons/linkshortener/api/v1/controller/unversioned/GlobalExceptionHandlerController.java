@@ -162,7 +162,7 @@ public class GlobalExceptionHandlerController {
 
   @ExceptionHandler(NoSuchUserFoundInTheSystemException.class)
   public ResponseEntity<Map<String, Object>> handleNoSuchUser(
-      NoSuchUserFoundInTheSystemException ex) {
+      final NoSuchUserFoundInTheSystemException ex) {
 
     return buildErrorResponse(
         HttpStatus.NOT_FOUND,
@@ -184,7 +184,7 @@ public class GlobalExceptionHandlerController {
 
   @ExceptionHandler(NoSuchShortLinkFoundInTheSystemException.class)
   public ResponseEntity<Map<String, Object>> handleNoSuchLink(
-      NoSuchShortLinkFoundInTheSystemException ex) {
+      final NoSuchShortLinkFoundInTheSystemException ex) {
 
     return buildErrorResponse(
         HttpStatus.NOT_FOUND,
@@ -206,7 +206,7 @@ public class GlobalExceptionHandlerController {
 
   @ExceptionHandler(ShortLinkIsOutOfDateException.class)
   public ResponseEntity<Map<String, Object>> handleShortLinkOutOfDate(
-      ShortLinkIsOutOfDateException ex) {
+      final ShortLinkIsOutOfDateException ex) {
     return buildErrorResponse(
         HttpStatus.GONE,
         "Short Link Expired",

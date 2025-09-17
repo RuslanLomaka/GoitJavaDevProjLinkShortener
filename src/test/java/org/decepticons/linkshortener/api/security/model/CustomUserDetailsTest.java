@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Collections;
 import org.decepticons.linkshortener.api.model.Role;
 import org.decepticons.linkshortener.api.model.User;
+import org.decepticons.linkshortener.api.model.UserStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -52,12 +53,13 @@ class CustomUserDetailsTest {
   }
 
   @Test
-  @DisplayName("should return true for account and credential status")
-  void shouldReturnTrueForAccountStatus() {
+  @DisplayName("should return true for an ACTIVE user")
+  void shouldReturnTrueForActiveUser() {
     // Given
     User user = new User();
     user.setUsername("testuser");
     user.setPasswordHash("encoded_password");
+    user.setStatus(UserStatus.ACTIVE);
 
     // When
     CustomUserDetails userDetails = new CustomUserDetails(user);
@@ -67,5 +69,24 @@ class CustomUserDetailsTest {
     assertTrue(userDetails.isAccountNonLocked());
     assertTrue(userDetails.isCredentialsNonExpired());
     assertTrue(userDetails.isEnabled());
+  }
+
+  @Test
+  @DisplayName("should return false for a LOCKED user")
+  void shouldReturnFalseForLockedUser() {
+    // Given
+    User user = new User();
+    user.setUsername("lockeduser");
+    user.setPasswordHash("encoded_password");
+    user.setStatus(UserStatus.LOCKED);
+
+    // When
+    CustomUserDetails userDetails = new CustomUserDetails(user);
+
+    // Then
+    assertTrue(userDetails.isAccountNonExpired());
+    assertFalse(userDetails.isAccountNonLocked());
+    assertTrue(userDetails.isCredentialsNonExpired());
+    assertFalse(userDetails.isEnabled());
   }
 }

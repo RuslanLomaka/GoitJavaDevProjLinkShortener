@@ -98,6 +98,38 @@ OpenAPI JSON:
 | GET    | `/api/links/{code}`  | Redirect by short code  |
 
 ---
+## Deployment
+
+The project is automatically deployed to a remote server via **GitHub Actions**.  
+Every merge/push to the `master` branch triggers the workflow (`.github/workflows/deploy.yml`) which:
+
+1. Connects to the server (`user@ip` via SSH)
+2. Executes the `deploy.sh` script
+3. Updates the repository (`git pull origin master`)
+4. Rebuilds Docker containers and restarts the application (`docker compose up -d --build`)
+
+**Note:** Private keys for GitHub Actions are stored in GitHub Secrets and **are not published** in the README.
+
+---
+
+## Postman Collections
+
+There are two collections in the `postman/` folder:
+
+- `Linkshortener_local_postman_collection.json` – for local version (`http://localhost:8080`)
+- `Linkshortener_deployed_postman_collection.json` – for the production server (`http://91.225.7.129:8080`)
+
+To use the collections, import them into Postman.
+
+---
+
+## Swagger (Production)
+
+API documentation for the production server is available here:  
+[Go to Swagger](http://91.225.7.129:8080/swagger-ui/index.html)
+
+
+---
 
 ## What this app can do
 - Shorten any valid URL and redirect by short code

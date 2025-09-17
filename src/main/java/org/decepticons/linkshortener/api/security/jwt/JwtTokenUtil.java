@@ -48,14 +48,18 @@ public class JwtTokenUtil {
   /**
    * Constructs a JwtTokenUtil with the given secrets and expiration times.
    *
-   * @param secretValue            the secret key for signing JWT tokens
-   * @param expirationSecondsValue the access token validity duration (seconds)
-   * @param refreshExpirationValue the refresh token validity duration (seconds)
+   * @param secretValue            the secret key for signing JWT tokens (from ENV)
+   * @param expirationSecondsValue the access token validity duration (seconds, from YAML)
+   * @param refreshExpirationValue the refresh token validity duration (seconds, from YAML)
    */
   public JwtTokenUtil(
+      // loaded from environment variable
       @Value("${JWT_SECRET}") final String secretValue,
-      @Value("3600") final long expirationSecondsValue,
-      @Value("604800") final long refreshExpirationValue) {
+      // configured in application.yaml
+      @Value("${jwt.ttl-seconds}") long expirationSecondsValue,
+      // configured in application.yaml
+      @Value("${jwt.refresh-ttl-seconds}") long refreshExpirationValue
+  ) {
     this.expirationSeconds = expirationSecondsValue;
     this.refreshExpirationSeconds = refreshExpirationValue;
     this.signingKey = getSignInKey(secretValue);

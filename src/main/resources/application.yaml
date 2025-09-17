@@ -27,8 +27,11 @@ link:
   expiration-days: ${LINK_EXPIRATION_DAYS:7}
 
 jwt:
-  secret: ${JWT_SECRET:dev-secret-change-me}
-  ttl-seconds: ${JWT_TTL_SECONDS:3600}
+  # Access token validity duration in seconds (1 hour by default)
+  ttl-seconds: 3600
+  # Refresh token validity duration in seconds (7 days by default)
+  refresh-ttl-seconds: 604800
+
 
 
 

@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
 /**
  * REST controller for user authentication.
  * Provides endpoints for user registration, login, and token refresh.

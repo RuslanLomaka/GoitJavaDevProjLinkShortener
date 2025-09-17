@@ -3,7 +3,6 @@ package org.decepticons.linkshortener.api.service;
 import java.util.UUID;
 import org.decepticons.linkshortener.api.model.User;
 
-
 /**
  * Service interface for retrieving information about the currently authenticated user.
  */

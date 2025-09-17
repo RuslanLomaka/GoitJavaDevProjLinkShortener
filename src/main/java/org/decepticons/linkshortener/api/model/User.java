@@ -130,5 +130,4 @@ public class User {
     this.roles = newRoles;
   }
 
-
 }

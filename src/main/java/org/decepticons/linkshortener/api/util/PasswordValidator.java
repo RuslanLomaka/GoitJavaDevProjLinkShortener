@@ -8,7 +8,6 @@ import java.util.regex.Pattern;
  */
 public final class PasswordValidator {
 
-
   /**
    * The regular expression pattern for password validation.
    * The pattern requires at least one digit, one lowercase letter,

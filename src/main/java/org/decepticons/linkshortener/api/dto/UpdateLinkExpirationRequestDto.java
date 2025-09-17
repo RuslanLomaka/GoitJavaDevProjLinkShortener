@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 
-
 /**
  * Data Transfer Object (DTO) for updating the expiration date of a shortened link.
  * This object is used to encapsulate the data required to update the expiration

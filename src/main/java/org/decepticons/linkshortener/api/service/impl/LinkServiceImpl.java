@@ -235,7 +235,6 @@ public class LinkServiceImpl implements LinkService {
             "No such short link found in the system", linkId.toString()
         ));
 
-
     if (!link.getOwner().getId().equals(currentUserId)) {
       throw new AccessDeniedException("You are not allowed to delete this link");
     }
@@ -277,6 +276,4 @@ public class LinkServiceImpl implements LinkService {
     return mapToResponse(saved);
   }
 
-
 }
-

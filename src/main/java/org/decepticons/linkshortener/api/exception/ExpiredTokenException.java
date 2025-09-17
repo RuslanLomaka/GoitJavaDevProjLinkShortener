@@ -1,6 +1,5 @@
 package org.decepticons.linkshortener.api.exception;
 
-
 /**
  * Thrown when a JWT token is expired.
  */

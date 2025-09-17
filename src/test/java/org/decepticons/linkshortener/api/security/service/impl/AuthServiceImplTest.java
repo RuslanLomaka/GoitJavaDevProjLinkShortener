@@ -4,9 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -14,7 +18,6 @@ import java.util.Date;
 import java.util.Optional;
 import org.decepticons.linkshortener.api.exception.InvalidTokenException;
 import org.decepticons.linkshortener.api.exception.UserAlreadyExistsException;
-import org.decepticons.linkshortener.api.exception.UserNotFoundException;
 import org.decepticons.linkshortener.api.model.RevokedToken;
 import org.decepticons.linkshortener.api.model.Role;
 import org.decepticons.linkshortener.api.model.User;
@@ -127,31 +130,30 @@ class AuthServiceImplTest {
     verify(userService, never()).findByUsername(anyString());
   }
 
-    @Test
-    @DisplayName("given a valid refresh token, when refreshing, then returns a User object")
-    void givenValidRefreshToken_whenRefreshing_thenReturnsUser() {
-        // Given
-        String authHeader = "Bearer " + expectedRefreshToken;
+  @Test
+  @DisplayName("given a valid refresh token, when refreshing, then returns a User object")
+  void givenValidRefreshToken_whenRefreshing_thenReturnsUser() {
+    // Given
+    String authHeader = "Bearer " + expectedRefreshToken;
 
-        when(jwtUtil.extractUsername(expectedRefreshToken)).thenReturn("testuser");
-        when(userService.findByUsername("testuser")).thenReturn(testUser);
+    when(jwtUtil.extractUsername(expectedRefreshToken)).thenReturn("testuser");
+    when(userService.findByUsername("testuser")).thenReturn(testUser);
 
-        // Stub the correct method
-        doReturn(true).when(jwtUtil).validateToken(anyString());
+    // Stub the correct method
+    doReturn(true).when(jwtUtil).validateToken(anyString());
 
-        // When
-        User actualUser = authService.refreshToken(authHeader);
+    // When
+    User actualUser = authService.refreshToken(authHeader);
 
-        // Then
-        assertNotNull(actualUser);
-        assertEquals("testuser", actualUser.getUsername());
-        verify(jwtUtil).extractUsername(expectedRefreshToken);
-        verify(jwtUtil).validateToken(expectedRefreshToken);
-        verify(userService).findByUsername("testuser");
-    }
+    // Then
+    assertNotNull(actualUser);
+    assertEquals("testuser", actualUser.getUsername());
+    verify(jwtUtil).extractUsername(expectedRefreshToken);
+    verify(jwtUtil).validateToken(expectedRefreshToken);
+    verify(userService).findByUsername("testuser");
+  }
 
-
-    @Test
+  @Test
   @DisplayName("given a null or malformed header, "
       + "when refreshing, then throws InvalidTokenException")
   void givenMalformedHeader_whenRefreshing_thenThrowsInvalidTokenException() {

@@ -58,7 +58,7 @@ class AuthControllerTest {
   private final ObjectMapper objectMapper = new ObjectMapper();
   // Use a PostgreSQL container for the tests
   @Container
- public static PostgreSQLContainer<?> postgresContainer = new PostgreSQLContainer<>(
+  public static PostgreSQLContainer<?> postgresContainer = new PostgreSQLContainer<>(
       "postgres:16-alpine")
       .withDatabaseName("testdb")
       .withUsername("testuser")
@@ -66,7 +66,7 @@ class AuthControllerTest {
 
   // Dynamically set the data source properties using the running container's details
   @DynamicPropertySource
-    static void setDatasourceProperties(DynamicPropertyRegistry registry) {
+  static void setDatasourceProperties(DynamicPropertyRegistry registry) {
     registry.add("spring.datasource.url", postgresContainer::getJdbcUrl);
     registry.add("spring.datasource.username", postgresContainer::getUsername);
     registry.add("spring.datasource.password", postgresContainer::getPassword);
@@ -183,8 +183,8 @@ class AuthControllerTest {
     registrationRequestDto.setUsername("refreshuser");
     registrationRequestDto.setPassword("Password123!");
     mockMvc.perform(post("/api/v1/auth/register")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(registrationRequestDto)));
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(registrationRequestDto)));
 
     AuthRequestDto loginRequestDto = new AuthRequestDto();
     loginRequestDto.setUsername("refreshuser");
@@ -217,71 +217,71 @@ class AuthControllerTest {
         .andExpect(status().isUnauthorized());
   }
 
-    @Test
-    @DisplayName("given a valid token, when logging out, then returns 200 OK")
-    void givenValidToken_whenLoggingOut_thenReturnsOk() throws Exception {
-        // 1. Register and log in to get a valid token
-        RegistrationRequestDto registrationDto = new RegistrationRequestDto();
-        registrationDto.setUsername("logoutuser");
-        registrationDto.setPassword("Password123!");
-        mockMvc.perform(post("/api/v1/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(registrationDto)))
-                .andExpect(status().isOk());
+  @Test
+  @DisplayName("given a valid token, when logging out, then returns 200 OK")
+  void givenValidToken_whenLoggingOut_thenReturnsOk() throws Exception {
+    // 1. Register and log in to get a valid token
+    RegistrationRequestDto registrationDto = new RegistrationRequestDto();
+    registrationDto.setUsername("logoutuser");
+    registrationDto.setPassword("Password123!");
+    mockMvc.perform(post("/api/v1/auth/register")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(registrationDto)))
+        .andExpect(status().isOk());
 
-        AuthRequestDto loginDto = new AuthRequestDto();
-        loginDto.setUsername("logoutuser");
-        loginDto.setPassword("Password123!");
-        MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginDto)))
-                .andExpect(status().isOk()) // Ensure the login is successful
-                .andReturn();
-        JsonNode jsonNode = objectMapper.readTree(result.getResponse().getContentAsString());
-        String accessToken = jsonNode.get("accessToken").asText();
+    AuthRequestDto loginDto = new AuthRequestDto();
+    loginDto.setUsername("logoutuser");
+    loginDto.setPassword("Password123!");
+    MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(loginDto)))
+        .andExpect(status().isOk()) // Ensure the login is successful
+        .andReturn();
+    JsonNode jsonNode = objectMapper.readTree(result.getResponse().getContentAsString());
+    String accessToken = jsonNode.get("accessToken").asText();
 
-        // 2. Perform a POST request to the logout endpoint
-        mockMvc.perform(post("/api/v1/auth/logout")
-                        .header("Authorization", "Bearer " + accessToken))
-                .andExpect(status().isOk());
-    }
+    // 2. Perform a POST request to the logout endpoint
+    mockMvc.perform(post("/api/v1/auth/logout")
+            .header("Authorization", "Bearer " + accessToken))
+        .andExpect(status().isOk());
+  }
 
-    @Test
-    @DisplayName("given a revoked refresh token, when refreshing, then returns 401 Unauthorized")
-    void givenRevokedRefreshToken_whenRefreshing_thenReturnsUnauthorized() throws Exception {
-        // 1. Register a new user
-        RegistrationRequestDto registrationDto = new RegistrationRequestDto();
-        registrationDto.setUsername("revokeduser");
-        registrationDto.setPassword("Password123!");
-        mockMvc.perform(post("/api/v1/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(registrationDto)))
-                .andExpect(status().isOk());
+  @Test
+  @DisplayName("given a revoked refresh token, when refreshing, then returns 401 Unauthorized")
+  void givenRevokedRefreshToken_whenRefreshing_thenReturnsUnauthorized() throws Exception {
+    // 1. Register a new user
+    RegistrationRequestDto registrationDto = new RegistrationRequestDto();
+    registrationDto.setUsername("revokeduser");
+    registrationDto.setPassword("Password123!");
+    mockMvc.perform(post("/api/v1/auth/register")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(registrationDto)))
+        .andExpect(status().isOk());
 
-        // 2. Log in to get access and refresh tokens
-        AuthRequestDto loginDto = new AuthRequestDto();
-        loginDto.setUsername("revokeduser");
-        loginDto.setPassword("Password123!");
-        MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginDto)))
-                .andExpect(status().isOk())
-                .andReturn();
+    // 2. Log in to get access and refresh tokens
+    AuthRequestDto loginDto = new AuthRequestDto();
+    loginDto.setUsername("revokeduser");
+    loginDto.setPassword("Password123!");
+    MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(loginDto)))
+        .andExpect(status().isOk())
+        .andReturn();
 
-        JsonNode jsonNode = objectMapper.readTree(loginResult.getResponse().getContentAsString());
-        String accessToken = jsonNode.get("accessToken").asText();
-        String refreshToken = jsonNode.get("refreshToken").asText();
+    JsonNode jsonNode = objectMapper.readTree(loginResult.getResponse().getContentAsString());
+    String accessToken = jsonNode.get("accessToken").asText();
+    String refreshToken = jsonNode.get("refreshToken").asText();
 
-        // 3. Revoke the refresh token manually
-        revokedTokenRepository.save(new RevokedToken(
-                refreshToken,
-                jwtUtil.extractExpiration(refreshToken).toInstant()
-        ));
+    // 3. Revoke the refresh token manually
+    revokedTokenRepository.save(new RevokedToken(
+        refreshToken,
+        jwtUtil.extractExpiration(refreshToken).toInstant()
+    ));
 
-        // 4. Attempt to refresh with the revoked refresh token
-        mockMvc.perform(post("/api/v1/auth/refresh")
-                        .header("Authorization", "Bearer " + refreshToken))
-                .andExpect(status().isUnauthorized());
-    }
+    // 4. Attempt to refresh with the revoked refresh token
+    mockMvc.perform(post("/api/v1/auth/refresh")
+            .header("Authorization", "Bearer " + refreshToken))
+        .andExpect(status().isUnauthorized());
+  }
 
 }

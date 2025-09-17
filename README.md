@@ -77,6 +77,7 @@ OpenAPI JSON:
 | POST   | `/api/v1/auth/register`  | Register a new user         |
 | POST   | `/api/v1/auth/login`     | Log in and get JWT tokens   |
 | POST   | `/api/v1/auth/refresh`   | Refresh access token        |
+| POST   | `/api/v1/auth/logout`    | Logout and revoke token     |
 
 ### Links (api-v1, requires JWT)
 | Method | Path                                 | Description               |
